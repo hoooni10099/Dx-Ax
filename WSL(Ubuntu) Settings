@@ -1,0 +1,62 @@
+WSL on Windows
+
+1. Windows 기능 켜기/끄기 창에서 아래 항목들 체크(체크되어 있는 항목들 있을수도 있음, 현재 나의 창에 체크되어 있는 항목들 나열한 것)
+
+.NET Framework 4.8 Advanced Services
+Linux용 Windows 하위 시스템
+Microsotf PDF로 인쇄
+Windows 하이퍼바이저 플랫폼
+Work Folders Client
+가상 머신 플랫폼
+미디어 기능
+원격 차등 압축 API 지원
+인쇄 및 문서 서비스
+
+2. Power Shell(리눅스용 명령 프롬프트, cmd 윈도우용 명령 프롬프트) 관리자 권한 실행
+
+3. 설치 가능한 배포판 목록 확인
+   wsl --list --online
+
+4. 우분투 설치
+   wsl --install -d Ubuntu
+
+5. 설치 확인
+   wsl --list --verbose
+   wsl -l -v
+
+#  기본 설치 시 WSL2가 자동 적용
+   필요 시 수동으로 버전 지정 가능
+   wsl --set-default-version 2
+
+6. Ubuntu 초기 설정(build-essential은 우분투에서 c/c++ 개발 도구 설치 but 버그로 인해 gdb(필수)는 따로 설치해줘야 함.)
+   sudo apt update && sudo apt upgradee -y
+   sudo apt install build-essential gdb -y
+
+7. Ubuntu 24.04 미러 사이트 변경(카카오)
+   sudo nano /etc/apt/sources.list.d/ubuntu.sources
+   URIs 항목을 아래처럼 변경
+   URIs: http://ftp.daumkakao.com/ubuntu/
+
+8. 디렉터리 만들고, 코드 짜기
+
+9. 컴파일 방법
+   gcc hello.c  # 기본 컴파일
+   gcc -c hello.c  # 오브젝트 파일 생성
+   gcc -o hello hello.c  # 실행 파일 생성
+
+10. 코드 실행
+   ./hello
+
+11. VS code 설치
+
+12. 확장 파일 설치
+   WSL과 Remote developement 확장 파일
+   C/C++ 관련 확장 파일
+   Korean 확장 파일
+
+13. WSL VScode에 연결
+   보기 - 명령팔레트 - wsl
+
+14. 만들어 놓은 디렉터리 VScode에 연결
+   파일 - 작업 영역 폴더 추가 - work
+
