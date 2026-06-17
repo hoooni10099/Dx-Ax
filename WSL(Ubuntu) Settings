@@ -60,3 +60,27 @@ Work Folders Client
 14. 만들어 놓은 디렉터리 VScode에 연결
    파일 - 작업 영역 폴더 추가 - work
 
+
+
+
+
+
+파일 - 기본 설정 - 코드 조각 구성 - c.json 파일 안에 내용 지우고 아래 코드 입력
+
+{
+    "C Main": {
+        "prefix": "cmain",
+        "body": [
+            "#include <stdio.h>",
+            "",
+            "int main()",
+            "{",
+            "    $0",
+            "    return 0;",
+            "}"
+        ],
+        "description": "C Main Function"
+    }
+}
+
+-> 새 파일에서 cmain만 쳐도 기본 세팅 코드 작성됨.
