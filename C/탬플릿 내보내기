@@ -1,0 +1,11 @@
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+
+int main() {
+
+
+
+	return 0;
+}
+
+위 코드 작성 - 프로젝트 - 템플릿 내보내기
