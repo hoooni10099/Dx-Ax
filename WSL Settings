@@ -1,22 +1,14 @@
 WSL on Windows
 
-1. Windows 기능 켜기/끄기 창에서 아래 항목들 체크(체크되어 있는 항목들 있을수도 있음)
+1. Windows 기능 켜기/끄기 창에서 아래 항목들 체크(체크되어 있는 항목들 있을수도 있음, 현재 나의 창에 체크되어 있는 항목들 나열한 것)
 
 .NET Framework 4.8 Advanced Services
-
 Linux용 Windows 하위 시스템
-
 Microsotf PDF로 인쇄
-
 Windows 하이퍼바이저 플랫폼
-
 Work Folders Client
-
 가상 머신 플랫폼
-
 미디어 기능
-
 원격 차등 압축 API 지원
-
 인쇄 및 문서 서비스
 
