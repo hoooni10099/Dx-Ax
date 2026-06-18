@@ -54,3 +54,4 @@ Grafana
 FastAPI
 
 apache2 -> 웹서버
+로그 데이터
