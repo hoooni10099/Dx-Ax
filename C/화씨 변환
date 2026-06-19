@@ -1,0 +1,15 @@
+#include <stdio.h>
+
+int main() {
+    int cel;
+    double fi;
+
+    printf("1에서 100 사이의 자연수를 입력하세요: ");
+    scanf("%d", &cel);
+
+    fi = 1.8 * (double)cel + 32;
+
+    printf("%.1f\n", fi);
+
+    return 0;
+}
