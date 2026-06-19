@@ -1,0 +1,10 @@
+#include <stdio.h>
+
+int main()
+{
+    char fruit[7] = "banana";
+    printf("바나나 : %s\n", fruit);
+    printf("바나나쨈 : %s %s\n", fruit, "jam");
+
+    return 0;
+}  
