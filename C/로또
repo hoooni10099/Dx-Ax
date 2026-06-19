@@ -1,0 +1,14 @@
+#include <stdio.h>
+#include <stdlib.h> // rand(), srand() 함수를 사용하기 위해 필요
+#include <time.h>   // time() 함수를 사용하기 위해 필요
+
+int main()
+{
+    srand((unsigned int)time(NULL)); // 실행할 때마다 진짜 랜덤한 값이 나오도록 시드(Seed) 초기화
+
+    for (int i = 1; i <= 5; i++) {
+        int num = (rand() % 10) + 1; // rand() % (max - min + 1) + min
+        printf("랜덤 숫자 %d: %d\n", i, num);
+    }
+    return 0;
+}
