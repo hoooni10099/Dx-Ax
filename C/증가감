@@ -1,0 +1,13 @@
+#include <stdio.h>
+
+int main()
+{
+    int a = 7, b = 7;
+
+    // printf("a : %d, b : %d\n", ++a, --b); //8, 6
+    // printf("a : %d, b : %d\n", ++a, --b); //9, 5
+    printf("a : %d, b : %d\n", ++a, --b); //8, 6
+    printf("a : %d, b : %d\n", a++, b--); //8, 6
+ 
+    return 0;
+}
