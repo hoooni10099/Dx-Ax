@@ -1,0 +1,44 @@
+#include <stdio.h>
+
+int plus(int x, int y);
+int minus(int x, int y);
+int multiple(int x, int y);
+double divide(int x, int y);
+
+int main()
+{
+    int a = 200, b = 150;
+
+    printf("plus : %d\n", plus(a, b));
+    printf("minus : %d\n", minus(a, b));
+    printf("multiple : %d\n", multiple(a, b));
+    printf("divide : %.2lf\n", divide(a, b));
+    return 0;
+}
+
+
+
+
+
+
+
+
+
+
+//////////////Func/////////////
+int plus(int x, int y) {
+    return x + y;
+}
+
+
+int minus(int x, int y) {
+    return x - y;
+}
+
+int multiple(int x, int y) {
+    return x * y;
+}
+
+double divide(int x, int y) {
+    return (double)x / y;
+}
