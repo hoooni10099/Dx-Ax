@@ -1,0 +1,45 @@
+#include <stdio.h>
+
+int width(void);
+int height(void);
+int square(int x, int y);
+
+int main()
+{
+    int x, y;
+    x = width();
+    y = height();
+
+    printf("넓이 : %d\n", square(x, y));
+
+    return 0;
+}
+
+
+
+
+//void 함수이름(void)
+//return값이 없는 함수
+
+
+
+///가로 길이를 입력받는 함수
+int width(void) {
+    int x;
+    printf("가로 : ");
+    scanf("%d", &x);
+    return x;
+}
+
+///세로 길이를 입력받는 함수
+int height(void) {
+    int y;
+    printf("세로 : ");
+    scanf("%d", &y);
+    return y;
+}
+
+///넓이를 구하는 함수
+int square(int x, int y) {
+    return x * y;
+}
