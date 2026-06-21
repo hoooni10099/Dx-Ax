@@ -1,0 +1,20 @@
+#include <stdio.h>
+
+int main()
+{
+    int i;
+    int sum = 0;
+
+    while (1) { // for(;;) {
+        printf("생산량 입력 : %d\n", i);
+        scanf("%d", &i);
+        sum += i;
+        if (sum >= 1000) {
+            break;
+        }
+        printf("현재 누적 생산량: %d\n", sum);
+    }
+    printf("생산 목표 달성!\n");
+    printf("최종 생산량: %d\n", sum);
+    return 0;
+}
