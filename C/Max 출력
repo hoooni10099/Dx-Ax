@@ -1,0 +1,36 @@
+#include <stdio.h>
+
+void print_max(int array[]);
+
+int main()
+{
+    int array[7] = {4, 5, 8, 1, 2, 3, 7};
+    int min = array[0];
+
+    for (int i = 1; i <7; i++) {
+        if (array[i] < min) {
+            min = array[i];
+        }
+    }
+    printf("가장 작은 값: %d\n", min);
+
+    print_max(array);
+
+    return 0;
+}
+
+
+
+
+
+
+/// 배열에서 가장 큰 값을 출력해주는 함수/
+void print_max(int array[]) {
+    int max = array[0];
+    for (int i = 1; i < 7; i++) {
+        if (array[i] > max) {
+            max = array[i];
+        }
+    }
+    printf("가장 큰 값: %d\n", max);
+}
