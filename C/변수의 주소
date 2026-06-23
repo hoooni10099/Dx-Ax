@@ -1,0 +1,13 @@
+#include <stdio.h>
+
+int main()
+{
+    int a = 100;
+    double b;
+    char c;
+
+    printf("int형 변수의 주소 : %u, %p\n", &a, &a);
+    printf("double형 변수의 주소 : %u, %p\n", &b, &b);
+
+    return 0;
+}
