@@ -1,0 +1,30 @@
+#include <stdio.h>
+
+int main()
+{
+    char ch;
+    int in;
+    double db;
+
+    char *pc = &ch;
+    int *pi = &in;
+    double *pd = &db;
+
+    printf("char 변수 자료형의 크기 : %d\n", sizeof(ch));
+    printf("int 변수 자료형의 크기 : %d\n", sizeof(in));
+    printf("db 변수 자료형의 크기 : %d\n", sizeof(db));
+
+    printf("\nchar 포인터 변수 자료형의 크기 : %d\n", sizeof(&ch));
+    printf("int 포인터 변수 자료형의 크기 : %d\n", sizeof(&in));
+    printf("db 포인터 변수 자료형의 크기 : %d\n", sizeof(&db));
+
+    printf("\nchar * 포인터의 크기 : %d\n", sizeof(pc));
+    printf("int * 포인터의 크기 : %d\n", sizeof(pi));
+    printf("db * 포인터의 크기 : %d\n", sizeof(pd));
+
+    printf("\nchar * 포인터가 가리키는 변수의 크기 : %d\n", sizeof(*pc));
+    printf("int * 포인터가 가리키는 변수의 크기 : %d\n", sizeof(*pi));
+    printf("db * 포인터가 가리키는 변수의 크기 : %d\n", sizeof(*pd));
+    
+    return 0;
+}
