@@ -1,0 +1,18 @@
+#include <stdio.h>
+
+int main()
+{
+    int a; // 정수 값
+    int* pa; // 주소 값
+
+    a = 100;
+    pa = &a;
+
+    printf("a 변수의 값: %d\n", a);
+    printf("a변수의 주소 값 : %u\n", &a);
+    printf("pa변수의 주소 값 : %u\n", &pa);
+    printf("pa변수의 값 : %u\n", pa);
+    printf("pa변수가 가르키는 변수의 값 : %d\n", *pa);
+
+    return 0;
+}
