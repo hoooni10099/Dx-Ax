@@ -47,6 +47,7 @@ ROS
 Mes - 미라콤
 Refactoring guru
 
+트위니
 
 TSDB/InffluxDB
 Docker를 이용해서 노트북에서 운용
