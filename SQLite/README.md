@@ -4,3 +4,5 @@ tasks.json 파일에서
 "${fileDirname}/${fileBasenameNoExtension}", "-lsqlite3"
 
 PostgreSQL
+
+Nas - Mariadb -> mp3 나만의 멜론
