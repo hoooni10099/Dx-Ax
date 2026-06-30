@@ -1,0 +1,23 @@
+#include <stdio.h>
+
+void print_num(int n);
+
+int main()
+{
+    int n;
+
+    printf("자연수를 입력하세요 : ");
+    scanf("%d", &n);
+
+    print_num(n);
+
+    return 0;
+}
+
+
+void print_num(int n) {
+    for (int i = 1; i <= n; i++) {
+        printf("%d ", i);
+    }
+    printf("\n");
+}
