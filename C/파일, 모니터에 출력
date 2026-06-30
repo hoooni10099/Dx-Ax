@@ -1,0 +1,22 @@
+#include <stdio.h>
+
+int main()
+{
+    FILE *fp;
+    char str[] = "banana";
+    int i;
+
+    fp = fopen("b.txt", "w");
+    
+    i = 0;
+
+    while (str[i] != '\0') {
+        fputc(str[i], fp); // 파일에 출력
+        printf("%c", str[i]); //모니터에 출력
+        i++;
+    }
+    fputc('\n', fp);
+    fclose(fp);
+
+    return 0;
+}
