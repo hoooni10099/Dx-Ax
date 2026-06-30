@@ -1,0 +1,50 @@
+// #include <stdio.h>
+
+// int main()
+// {
+//     int age;
+//     char name[20];
+
+//     printf("나이 입력 : ");
+//     scanf("%d", &age);
+
+//     printf("이름 입력 : ");
+//     // fgets(name, sizeof(name), stdin);
+//     scanf(" %s", name);
+//     printf("나이 : %d, 이름 : %s\n", age, name);
+
+//     return 0;
+// }
+
+
+
+#include <stdio.h>
+#include <stdlib.h> // atoi 함수 사용을 위해 포함
+#include <string.h>
+
+int main()
+{
+    int age;
+    char age_buffer[20]; // 나이를 문자열로 임시 저장할 버퍼
+    char name[20];
+
+    // 1. 나이를 문자열로 입력받은 후 정수로 변환
+    printf("나이 입력 : ");
+    fgets(age_buffer, sizeof(age_buffer), stdin);
+    age = atoi(age_buffer); // 문자열을 정수(int)로 변환 (stdlib.h 필요)
+
+    // 2. 이름 입력 (버퍼가 깨끗하므로 정상 작동함)
+    printf("이름 입력 : ");
+    fgets(name, sizeof(name), stdin);
+    
+    // fgets로 입력받으면 문자열 끝에 개행문자(\n)가 포함되므로 제거해줍니다.
+    size_t len = strlen(name);
+    if (len > 0 && name[len - 1] == '\n') {
+        name[len - 1] = '\0';
+    }
+
+    // 3. 결과 출력
+    printf("나이 : %d, 이름 : %s\n", age, name);
+
+    return 0;
+}
