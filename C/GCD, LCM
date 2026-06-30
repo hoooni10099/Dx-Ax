@@ -1,0 +1,27 @@
+#include <stdio.h>
+
+int main()
+{
+    int num1, num2;
+    int GCD, LCM;
+    int a, b, temp;
+
+    printf("두 양의 정수 a, b를 입력하세요 : ");
+    scanf("%d %d", &num1, &num2);
+
+    a = num1;
+    b = num2;
+
+    while(b != 0) {
+        temp = a % b;
+        a = b;
+        b = temp;
+    }
+    GCD = a;
+
+    LCM = (num1 * num2) / GCD;
+
+    printf("%d %d\n", GCD, LCM);
+
+    return 0;
+}
