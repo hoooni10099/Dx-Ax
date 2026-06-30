@@ -6,3 +6,32 @@ tasks.json 파일에서
 PostgreSQL
 
 Nas - Mariadb -> mp3 나만의 멜론
+
+
+
+smart@3ST20:~$ ls -a
+.              .bashrc   .dotnet      .profile                   .wget-hsts
+..             .cache    .lesshst     .sqlite_history            SQLiteStudio
+.bash_history  .config   .local       .vscode-remote-containers  sqlitestudio-3.4.21-linux-x64.tar.xz
+.bash_logout   .copilot  .motd_shown  .vscode-server             work
+smart@3ST20:~$ cd ~
+smart@3ST20:~$ ls -a
+.              .bashrc   .dotnet      .profile                   .wget-hsts
+..             .cache    .lesshst     .sqlite_history            SQLiteStudio
+.bash_history  .config   .local       .vscode-remote-containers  sqlitestudio-3.4.21-linux-x64.tar.xz
+.bash_logout   .copilot  .motd_shown  .vscode-server             work
+smart@3ST20:~$ nano .sqliterc
+smart@3ST20:~$ ls -a
+.              .cache    .local           .vscode-remote-containers             work
+..             .config   .motd_shown      .vscode-server
+.bash_history  .copilot  .profile         .wget-hsts
+.bash_logout   .dotnet   .sqlite_history  SQLiteStudio
+.bashrc        .lesshst  .sqliterc        sqlitestudio-3.4.21-linux-x64.tar.xz
+smart@3ST20:~$ cat .sqliterc
+.header on
+.mode table
+smart@3ST20:~$ sqlite3 ~/wokr/dbfiles/lot2.db
+-- Loading resources from /home/smart/.sqliterc
+SQLite version 3.46.1 2024-08-13 09:16:08
+Enter ".help" for usage hints.
+sqlite>
