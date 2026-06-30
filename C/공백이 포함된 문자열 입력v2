@@ -1,0 +1,17 @@
+#include <stdio.h>
+#include <string.h>
+
+int main()
+{
+    char str[80];
+
+    printf("공백이 포함된 문자열 입력 : ");
+    fgets(str, sizeof(str), stdin);
+
+    str[strlen(str) - 1] = '\0'; // '\n' --> '\0' // 버그 제거
+
+    printf("현재 글자 수 : %d\n", strlen(str)); //예상 9개 -->'\n' 포함
+
+    printf("입력된 문자열은 %s입니다\n", str);
+    return 0;
+}
