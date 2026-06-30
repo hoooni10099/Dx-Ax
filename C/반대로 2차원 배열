@@ -1,0 +1,19 @@
+#include <stdio.h>
+
+int main()
+{
+    int score[5][5];
+    int i, j;
+    int cnt = 25;
+
+
+    // 2차원 배열 초기화
+    for (i = 4; i >= 0; i--) {
+        for (int j = 4; j >= 0; j--) {
+            score[i][j] = cnt--;
+            printf("%d\t", score[i][j]);
+        }
+        printf("\n");
+    }
+    return 0;
+}
