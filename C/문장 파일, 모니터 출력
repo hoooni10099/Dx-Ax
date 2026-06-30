@@ -1,0 +1,49 @@
+// #include <stdio.h>
+
+// int main()
+// {
+//     FILE *fp;
+//     char str[] = "Hello World~!";
+    
+//     fp = fopen("c.txt", "w");
+
+//     int i = 0;
+
+//     while(str[i] != '\0') {
+//         fputc(str[i], fp);
+//         printf("%c", str[i]);
+//         i++;
+//     }
+//     fputc('\n', fp);
+//     fclose(fp);
+
+//     return 0;
+// }
+
+
+//------------------ 2단계
+
+#include <stdio.h>
+
+int main()
+{
+    FILE *fp;
+    char str[100];
+
+    printf("문장을 입력하세요 : ");
+    fgets(str, 100, stdin);
+    
+    fp = fopen("c.txt", "w");
+
+    int i = 0;
+
+    while(str[i] != '\0') {
+        fputc(str[i], fp);
+        printf("%c", str[i]);
+        i++;
+    }
+    fputc('\n', fp);
+    fclose(fp);
+
+    return 0;
+}
