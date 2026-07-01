@@ -30,6 +30,8 @@ smart@3ST20:~$ ls -a
 smart@3ST20:~$ cat .sqliterc
 .header on
 .mode table
+.nullvalue NULL
+.timer on
 smart@3ST20:~$ sqlite3 ~/wokr/dbfiles/lot2.db
 -- Loading resources from /home/smart/.sqliterc
 SQLite version 3.46.1 2024-08-13 09:16:08
