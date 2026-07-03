@@ -1,0 +1,102 @@
+#include <stdio.h> // fseek() 함수를 이용해서?????
+
+typedef struct {
+    int id;
+    char name[50];
+    int qty, price;
+    char lot[30];
+} Product;
+
+void createProduct();
+void readProducts();
+
+int main()
+{
+    int menu;
+
+    while (1) {
+        printf("\n===== 재고 관리 프로그램 =====\n");
+        printf("1. 제품 추가\n");
+        printf("2. 제품 조회\n");
+        printf("0. 종료\n");
+        printf("메뉴 선택 : ");
+        scanf("%d", &menu);
+
+        switch (menu)
+        {
+        case 1:
+            createProduct();
+            break;
+
+        case 2:
+            readProducts();
+            break;
+
+        case 0:
+            printf("프로그램을 종료합니다.\n");
+            return 0;
+
+        default:
+            printf("잘못된 메뉴입니다.\n");
+            break;
+        }
+    }
+    
+    return 0;
+}
+
+    void createProduct() {
+        FILE *fp;
+    Product p;
+
+    printf("제품 번호 입력 : ");
+    scanf("%d", &p.id);
+
+    printf("제품명 입력 : ");
+    scanf("%s", p.name);
+
+    printf("수량 입력 : ");
+    scanf("%d", &p.qty);
+
+    printf("제품 가격 입력 : ");
+    scanf("%d", &p.price);
+
+    printf("LOT 번호 생산일자 입력 : ");
+    scanf("%s", p.lot);
+
+    fp = fopen("products.txt", "a");
+
+    if (fp == NULL) {
+        printf("파일 열기 실패\n");
+        return;
+    }
+
+    fprintf(fp, "%d,%s,%d,%d,%s\n", p.id, p.name, p.qty, p.price, p.lot);
+    
+    fclose(fp);
+
+    printf("제품 추가 완료\n");
+    }
+    
+void readProducts(){
+    FILE *FP;
+    Product p;
+
+    FP = fopen("products.txt", "r");
+
+    if (FP == NULL) {
+        printf("파일 열기 실패\n");
+        return;
+    }
+
+    printf("제품 번호\t제품명\t수량\t제품 가격\tLOT 번호 생산일자\n");
+    printf("--------------------------\n");
+
+    while (fscanf(FP, "%d,%49[^,],%d,%d,%49[^,]", 
+                    &p.id, p.name, &p.qty,
+                    &p.price, p.lot) == 5) {
+                        printf("%d\t%s\t%d\t%d\t%s\n",
+                                p.id, p.name, p.qty, p.price, p.lot);
+                    }
+                    fclose(FP);
+}
