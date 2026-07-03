@@ -1,0 +1,10 @@
+a = int(input('물건값을 입력하시오 : '))
+b = int(input('1000원 지폐 개수 : '))
+c = int(input('500원 동전 개수 : '))
+d = int(input('100원 동전 개수 : '))
+change = ((b * 1000) + (c * 500) + (d * 100)) - a
+e = change // 500
+f = change // 100
+g = change // 10
+h = change
+print("500원 = ", e, "100원 = ", f, "10원 = ", g, "1원 = ", h)
