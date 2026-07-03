@@ -1,0 +1,258 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <sqlite3.h>
+
+typedef struct {
+int emp_id;
+char name[20];
+char department[30];
+int is_present;
+} Employee;
+
+void register_employee();
+void check_in();
+void view_attendance();
+void view_absentees();
+void view_employee();
+
+int main()
+{
+    int menu;
+    sqlite3 *db;
+    char *errMsg = NULL;
+
+    if (sqlite3_open("/home/smart/work/dbfiles/person.db", &db) != SQLITE_OK) {
+        printf("DB 열기 실패\n");
+        return 1;
+    }
+
+    const char *sql = "CREATE TABLE IF NOT EXISTS employee ("
+            "emp_id INTEGER PRIMARY KEY,"
+            "name TEXT NOT NULL,"
+            "department TEXT,"
+            "is_present INTEGER DEFAULT 0"
+        ");";
+
+    if (sqlite3_exec(db, sql, NULL, NULL, &errMsg) != SQLITE_OK) {
+        printf("테이블 생성 실패 : %s\n", errMsg);
+        sqlite3_free(errMsg);
+        sqlite3_close(db);
+        return 1;
+    }
+    
+    const char *sql_init = 
+        "INSERT OR IGNORE INTO employee VALUES"
+        "(1, 'Hong', 'Production', 0),"
+        "(2, 'Kim', 'Equipment', 0),"
+        "(3, 'Lee', 'Quality', 0),"
+        "(4, 'Park', 'Logistics', 0);";
+
+    if (sqlite3_exec(db, sql_init, NULL, NULL, &errMsg) != SQLITE_OK) {
+        printf("초기 데이터 입력 실패 : %s\n", errMsg);
+        sqlite3_free(errMsg);
+    }
+    else {
+        printf("테이블 초기화 완료\n");
+    }
+
+    sqlite3_close(db);
+
+    while (1) {
+        printf("\n");
+        printf("================================\n");
+        printf("직원 근태 관리 프로그램\n");
+        printf("================================\n");
+        printf("1. 신규 직원 등록\n");
+        printf("2. 출근 처리\n");
+        printf("3. 출근 직원 조회\n");
+        printf("4. 결근 직원 조회\n");
+        printf("5. 전체 직원 조회\n");
+        printf("6. 종료\n");
+        printf("--------------------------------\n");
+        printf("메뉴 선택 : \n");
+        scanf("%d", &menu);
+        printf("\n");
+
+        switch (menu) {
+            case 1:
+                register_employee();
+                break;
+            case 2:
+                check_in();
+                break;
+            case 3:
+                view_attendance();
+                break;
+            case 4:
+                view_absentees();
+                break;
+            case 5:
+                view_employee();
+                break;
+            case 6:
+                printf("프로그램을 종료합니다.\n");
+                return 0;
+            default:
+                printf("잘못된 메뉴입니다.\n");
+                break;
+        }
+    }
+    return 0;
+}
+
+int callback(void *p_is_first, int argc, char **argv, char **azColName) {
+    int *is_first = (int *)p_is_first;
+    
+    if (*is_first) {
+        printf("\n%-10s %-15s %-15s\n", "사원ID", "이름", "부서");
+        printf("-----------------------------------------\n");
+        *is_first = 0;
+    }
+
+    printf("%-10s %-15s %-15s\n", argv[0], argv[1], argv[2]);
+    return 0; 
+}
+
+void register_employee() {
+    sqlite3 *db;
+    char *errMsg = NULL;
+    Employee emp;
+    char sql[256];
+
+    if (sqlite3_open("/home/smart/work/dbfiles/person.db", &db) != SQLITE_OK) {
+        printf("데이터베이스 열기 실패\n");
+        return;
+    }
+    
+    printf("직원 id 입력 : ");
+    scanf("%d", &emp.emp_id);
+
+    printf("직원 이름 입력 : ");
+    scanf("%s", emp.name);
+
+    printf("직원 부서 입력 : ");
+    scanf("%s", emp.department);
+
+    printf("직원 출근 상태 입력 : ");
+    scanf("%d", &emp.is_present);
+
+    sprintf(sql, "INSERT INTO employee VALUES (%d, '%s', '%s', %d)", emp.emp_id, emp.name, emp.department, emp.is_present);
+    if (sqlite3_exec(db, sql, NULL, NULL, &errMsg) != SQLITE_OK) {
+        printf("직원 등록 실패 : %s\n", errMsg);
+        sqlite3_free(errMsg);
+    }
+    else {
+        printf("직원 등록 완료 (id : %d, 이름 : %s)\n", emp.emp_id, emp.name);
+    }
+
+    sqlite3_close(db);
+}
+
+void check_in() {
+    sqlite3 *db;
+    char *errMsg = NULL;
+    int emp_id;
+    char sql[256];
+
+    if (sqlite3_open("/home/smart/work/dbfiles/person.db", &db) != SQLITE_OK) {
+        printf("데이터베이스 열기 실패\n");
+        return;
+    }
+
+    printf("출근 처리할 직원 id 입력 : ");
+    scanf("%d", &emp_id);
+
+    sprintf(sql, "UPDATE employee SET is_present = 1 WHERE emp_id = %d", emp_id);
+    if (sqlite3_exec(db, sql, NULL, NULL, &errMsg) != SQLITE_OK) {
+        printf("출근 처리 실패 : %s\n", errMsg);
+        sqlite3_free(errMsg);
+    }
+    else {
+        if (sqlite3_changes(db) == 0) {
+            printf("출근 처리 실패: 존재하지 않는 직원 ID입니다. (입력 ID: %d)\n", emp_id);
+        } else {
+            printf("출근 처리 완료 (직원 id : %d)\n", emp_id);
+        }
+    }
+
+    sqlite3_close(db);
+    
+}
+
+void view_attendance() {
+    sqlite3 *db;
+    char *errMsg = NULL;
+    int is_first = 1;
+    const char *sql = "SELECT emp_id, name, department FROM employee WHERE is_present = 1;";
+
+    if (sqlite3_open("/home/smart/work/dbfiles/person.db", &db) != SQLITE_OK) {
+        printf("데이터베이스 열기 실패\n");
+        return;
+    }
+
+    printf("\n출근 직원 명단 조회\n");
+
+    if (sqlite3_exec(db, sql, callback, &is_first, &errMsg) != SQLITE_OK) {
+        printf("조회 실패 : %s\n", errMsg);
+        sqlite3_free(errMsg);
+    }
+    else {
+        if (is_first == 1) printf("\n출근한 직원이 없습니다.\n");
+        printf("조회 완료\n");
+    }
+
+    sqlite3_close(db);
+}
+
+void view_absentees() {
+    sqlite3 *db;
+    char *errMsg = NULL;
+    int is_first = 1;
+
+    const char *sql = "SELECT emp_id, name, department FROM employee WHERE is_present = 0;";
+
+    if (sqlite3_open("/home/smart/work/dbfiles/person.db", &db) != SQLITE_OK) {
+        printf("데이터베이스 열기 실패\n");
+        return;
+    }
+
+    printf("\n결근 직원 명단 조회\n");
+
+    if (sqlite3_exec(db, sql, callback, &is_first, &errMsg) != SQLITE_OK) {
+        printf("조회 실패 : %s\n", errMsg);
+        sqlite3_free(errMsg);
+    }
+    else {
+        if (is_first == 1) printf("\n결근한 직원이 없습니다.\n");
+        printf("조회 완료\n");
+    }
+
+    sqlite3_close(db);
+}
+
+void view_employee() {
+    sqlite3 *db;
+    char *errMsg = NULL;
+    int is_first = 1;
+
+    const char *sql = "SELECT emp_id, name, department FROM employee;";
+
+    if (sqlite3_open("/home/smart/work/dbfiles/person.db", &db) != SQLITE_OK) {
+        printf("데이터베이스 열기 실패\n");
+        return;
+    }
+
+    printf("\n전체 직원 명단 조회\n");
+
+    if (sqlite3_exec(db, sql, callback, &is_first, &errMsg) != SQLITE_OK) {
+        printf("조회 실패 : %s\n", errMsg);
+        sqlite3_free(errMsg);
+    }
+    else {
+        if (is_first == 1) printf("\n등록된 직원이 없습니다.\n");
+        printf("조회 완료\n");
+    }
+
+    sqlite3_close(db);
+}
