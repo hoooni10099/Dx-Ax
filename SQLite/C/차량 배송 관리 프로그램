@@ -1,0 +1,224 @@
+#include <stdio.h>
+#include <string.h>
+
+#define FILE_NAME "cars.txt"
+
+typedef struct {
+    char name[50];
+    char color[50];
+    int qty;
+    char desti[50]; // destination
+} Cars;
+
+void createCars();
+void readCars();
+void updateCars();
+void deleteCars();
+
+int parseCars(char line[], Cars *p);
+
+int main()
+{
+    int type;
+
+    while (1) {
+        printf("\n===== 차량 배송 관리 프로그램 =====\n");
+        printf("1. 차량 추가\n");
+        printf("2. 차량 조회\n");
+        printf("3. 차량 수정\n");
+        printf("4. 차량 삭제\n");
+        printf("0. 종료\n");
+        printf("메뉴 선택 : ");
+        scanf("%d", &type);
+
+        switch (type) {
+            case 1:
+                createCars();
+                break;
+            case 2:
+                readCars();
+                break;
+            case 3:
+                updateCars();
+                break;
+            case 4:
+                deleteCars();
+                break;
+            case 0:
+                printf("프로그램을 종료합니다.\n");
+                return 0;
+            default:
+                printf("잘못된 메뉴입니다.\n");
+                break;
+        }
+    }
+    return 0;
+}
+
+int parseCars(char line[], Cars *p) {
+    line[strcspn(line, "\n")] = '\0';
+
+    return sscanf(line, "%49[^,],%49[^,],%d,%49[^,],",
+                    p->name, p->color, &p->qty, p->desti);
+}
+
+void createCars() {
+    FILE *fp;
+    Cars c;
+
+    fp = fopen(FILE_NAME, "a");
+
+    if (fp == NULL) {
+        perror("파일 열기 실패");
+        return;
+    }
+
+    printf("\n[차량 추가]");
+
+    printf("차량 이름 : ");
+    scanf("%49s", c.name);
+
+    printf("차량 색상 : ");
+    scanf("%49s", c.color);
+
+    printf("차량 생산량 : ");
+    scanf("%d", &c.qty);
+
+    printf("차량 배송지 : ");
+    scanf("%49s", c.desti);
+
+    fprintf(fp, "%s,%s,%d,%s\n", c.name, c.color, c.qty, c.desti);
+
+    fclose(fp);
+
+    printf("차량이 추가되었습니다.\n");
+
+}
+
+void readCars() {
+    FILE *fp;
+    Cars c;
+    char line[256];
+    int count = 0;
+    int lineNo = 0;
+
+    fp = fopen(FILE_NAME, "r");
+
+    if (fp == NULL) {
+        perror("파일 열기 실패");
+        return;
+    }
+
+    printf("\n[차량 목록]\n");
+    printf("차량 이름\t차량 색상\t차량 생산량\t차량 배송지\n");
+    printf("-------------------------------------------------\n");
+
+    while (fgets(line, sizeof(line), fp) != NULL) {
+        lineNo++;
+
+        if (parseCars(line, &c) == 4) {
+            printf("%s\t%s\t%d\t%s\n", c.name, c.color, c.qty, c.desti);
+            count++;
+        }
+        else {
+            printf("[형식 오류] %d번째 줄: %s\n", lineNo, line);
+        }
+    }
+
+    fclose(fp);
+
+    printf("총 %d개 조회\n", count);
+}
+
+void updateCars() {
+    FILE *src;
+    FILE *temp;
+    Cars c;
+    char line[256];
+
+    char carId[50];
+    int found = 0;
+
+    src = fopen(FILE_NAME, "r");
+    temp = fopen("temp.txt", "w");
+
+    if (src == NULL || temp == NULL) {
+        perror("파일 열기 실패");
+        return;
+    }
+
+    printf("\n[차량 수정]\n");
+    printf("수정할 차량 이름 : ");
+    scanf("%s", carId);
+
+    while (fgets(line, sizeof(line), src) != NULL) {
+        if (parseCars(line, &c) == 4) {
+            if (c.name == carId) {
+                printf("새 색상 : ");
+                scanf("%s", c.color);
+
+                printf("새 생산량 : ");
+                scanf("%d", c.qty);
+
+                printf("새 배송지 : ");
+                scanf("%s", c.desti);
+
+                found = 1;
+            }
+            fprintf(temp, "%s,%s,%d,%s\n", c.name, c.color, c.qty, c.desti);
+        }
+    }
+    fclose(src);
+    fclose(temp);
+
+    remove(FILE_NAME);
+    rename("temp.txt", FILE_NAME);
+
+    if (found)
+        printf("차량 정보가 수정되었습니다.\n");
+    else
+        printf("해당 차량 정보가 없습니다.\n");
+}
+
+void deleteCars() {
+    FILE *src;
+    FILE *temp;
+    Cars c;
+    char line[256];
+
+    int carId;
+    int found = 0;
+
+    src = fopen(FILE_NAME, "r");
+    temp = fopen("temp.txt", "w");
+
+    if (src == NULL || temp == NULL)
+    {
+        perror("파일 열기 실패");
+        return;
+    }
+
+    printf("\n[차량 삭제]\n");
+    printf("삭제할 차량 이름 : ");
+    scanf("%s", carId);
+
+    while (fgets(line, sizeof(line), src) != NULL) {
+        if (parseCars(line, &c) == 4) {
+            if (c.name == carId) {
+                found = 1;
+                continue;
+            }
+            fprintf(temp, "%s,%s,%d,%s\n", c.name, c.color, c.qty, c.desti);
+        }
+    }
+    fclose(src);
+    fclose(temp);
+
+    remove(FILE_NAME);
+    rename("temp.txt", FILE_NAME);
+
+    if (found)
+        printf("차량이 삭제되었습니다.\n");
+    else
+        printf("해당 제품 번호가 없습니다.\n");
+}
