@@ -1,0 +1,13 @@
+
+print('width : ', end ='')
+width = int(input())
+print('height : ', end = '')
+height = int(input())
+
+print(width)
+print(type(width))
+
+print(height)
+print(type(height))
+
+print('w*h = ', width * height)
