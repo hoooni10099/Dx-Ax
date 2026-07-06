@@ -32,6 +32,7 @@ smart@3ST20:~$ cat .sqliterc
 .mode table
 .nullvalue NULL
 .timer on
+PRAGMA foreign_keys;
 smart@3ST20:~$ sqlite3 ~/wokr/dbfiles/lot2.db
 -- Loading resources from /home/smart/.sqliterc
 SQLite version 3.46.1 2024-08-13 09:16:08
