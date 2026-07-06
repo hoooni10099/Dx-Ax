@@ -117,3 +117,6 @@ SCADA
 tableau / power bi
 
 클라우드 관련 네트워크 기술
+
+ERD
+erwin, DA#, drawdb
