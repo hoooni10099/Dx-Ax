@@ -1,0 +1,34 @@
+import sqlite3
+conn = None
+
+try:
+    conn = sqlite3.connect("/home/smart/work/dbfiles/test1.db")
+
+    cursor = conn.cursor()
+
+    sql = """
+    CREATE TABLE Order_Items
+(
+    item_id INTEGER PRIMARY KEY,
+    order_id INTEGER NOT NULL,
+    product_name TEXT,
+    quantity INTEGER,
+    price INTEGER,
+
+    FOREIGN KEY(order_id)
+        REFERENCES Orders(order_id)
+);
+    """
+
+    cursor.execute(sql)
+
+    conn.commit()
+
+    print("Customers 테이블 생성 완료")
+
+except sqlite3.Error as e:
+    print("테이블 생성 실패 : ", e)
+
+finally:
+    if conn:
+        conn.close()
