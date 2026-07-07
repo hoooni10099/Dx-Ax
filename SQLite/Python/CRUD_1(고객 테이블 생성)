@@ -1,0 +1,29 @@
+import sqlite3
+conn = None
+
+try:
+    conn = sqlite3.connect("/home/smart/work/dbfiles/test1.db")
+
+    cursor = conn.cursor()
+
+    sql = """
+    CREATE TABLE Customers
+    (
+        customer_id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE
+    );
+    """
+
+    cursor.execute(sql)
+
+    conn.commit()
+
+    print("Customers 테이블 생성 완료")
+
+except sqlite3.Error as e:
+    print("테이블 생성 실패 : ", e)
+
+finally:
+    if conn:
+        conn.close()
