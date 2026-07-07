@@ -1,0 +1,12 @@
+def area(radius):
+    if radius > 0:
+        area = 3.141592 * radius ** 2
+    else:
+        area = 0
+    return area
+
+def main():
+    print("20cm 피자 2개의 면적 : ", area(20) + area(20))
+    print("30cm 피자 1개의 면적 : ", area(30))
+
+main()
