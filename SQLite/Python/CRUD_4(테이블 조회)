@@ -1,0 +1,18 @@
+import sqlite3
+
+conn = sqlite3.connect("/home/smart/work/dbfiles/test1.db")
+
+cursor = conn.cursor()
+
+sql = """
+    SELECT * FROM Customers;
+"""
+
+cursor.execute(sql)
+
+rows = cursor.fetchall()
+
+for row in rows:
+    print(row)
+
+conn.close()
