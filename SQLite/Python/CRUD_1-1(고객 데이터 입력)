@@ -1,0 +1,23 @@
+import sqlite3
+
+def main():
+
+    sql = """
+    INSERT INTO Customers VALUES
+    (1,'Kim','kim@test.com'),
+    (2,'Lee','lee@test.com'),
+    (3,'Park','park@test.com');
+"""
+
+    with sqlite3.connect("/home/smart/work/dbfiles/test1.db") as conn:
+
+        cursor = conn.cursor()
+
+        cursor.execute(sql)
+
+        conn.commit()
+
+        print("데이터 삽입 완료")
+
+if __name__ == "__main__":
+    main()
