@@ -31,7 +31,7 @@ Work Folders Client
    wsl --set-default-version 2
 
 6. Ubuntu 초기 설정(build-essential은 우분투에서 c/c++ 개발 도구 설치 but 버그로 인해 gdb(필수)는 따로 설치해줘야 함.)
-   sudo apt update && sudo apt upgradee -y
+   sudo apt update && sudo apt upgrade -y
    sudo apt install build-essential gdb -y
 
 7. Ubuntu 24.04 미러 사이트 변경(카카오)
