@@ -1,0 +1,23 @@
+import sqlite3
+
+def main():
+
+    sql = """
+    INSERT INTO Orders VALUES
+    (1,1,'2026-07-01'),
+    (2,1,'2026-07-02'),
+    (3,2,'2026-07-03');
+"""
+
+    with sqlite3.connect("/home/smart/work/dbfiles/test1.db") as conn:
+
+        cursor = conn.cursor()
+
+        cursor.execute(sql)
+
+        conn.commit()
+
+        print("데이터 삽입 완료")
+
+if __name__ == "__main__":
+    main()
