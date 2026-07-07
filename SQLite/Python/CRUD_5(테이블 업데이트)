@@ -1,0 +1,17 @@
+import sqlite3
+
+conn = sqlite3.connect("/home/smart/work/dbfiles/test1.db")
+
+cursor = conn.cursor()
+
+sql = """
+    UPDATE Customers SET name = 'Park' WHERE customer_id = 3;
+"""
+
+cursor.execute(sql)
+
+conn.commit()
+
+print("데이터 수정 완료")
+
+conn.close()
