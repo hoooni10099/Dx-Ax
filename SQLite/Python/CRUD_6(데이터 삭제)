@@ -1,0 +1,17 @@
+import sqlite3
+
+conn = sqlite3.connect("/home/smart/work/dbfiles/test1.db")
+
+cursor = conn.cursor()
+
+sql = """
+    DELETE FROM Orders WHERE order_id = 9;
+"""
+
+cursor.execute(sql)
+
+conn.commit()
+
+print("데이터 삭제 완료")
+
+conn.close()
