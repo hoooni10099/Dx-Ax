@@ -120,3 +120,5 @@ tableau / power bi
 
 ERD
 erwin, DA#, drawdb
+
+SOA 객체지향?
