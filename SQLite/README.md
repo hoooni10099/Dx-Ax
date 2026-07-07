@@ -38,3 +38,9 @@ smart@3ST20:~$ sqlite3 ~/wokr/dbfiles/lot2.db
 SQLite version 3.46.1 2024-08-13 09:16:08
 Enter ".help" for usage hints.
 sqlite>
+
+
+
+
+ON DELETE CASCADE와 같은 명령어 사용할 때 신중하게 생각하고 사용
+이 프로젝트에서 테이블들을 한꺼번에 삭제해도 되는가?
