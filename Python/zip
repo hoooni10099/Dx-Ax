@@ -1,0 +1,5 @@
+qu = ['name', 'quest', 'color']
+an = ['Kim', '파이썬', 'blue']
+
+for q, a in zip(qu, an):
+    print(f'What is your {q}? It is {a}')
