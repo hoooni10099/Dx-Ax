@@ -6,6 +6,7 @@ def create_table(db_path):
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
+# AUTOINCREMENT?
         sql = """
         CREATE TABLE IF NOT EXISTS friend
         (
