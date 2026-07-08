@@ -1,0 +1,31 @@
+# score = [28, 31, 33, 35, 27, 26, 25]
+
+# for i in range(len(score)):
+#     print(score[i], end = ',')
+
+
+
+
+# score = [28, 31, 33, 35, 27, 26, 25]
+
+# for i in score:
+#     print(i, end = ',')
+
+list = []
+count = 0
+
+for i in range(1, 6):
+    score = int(input(f'{i}번째 성적을 입력하시오 : '))
+    list.append(score)
+
+    if score >= 80:
+        count += 1
+    
+mean = sum(list) / len(list)
+max = max(list)
+min = min(list)
+
+print(f'성적 평균 = {mean}')
+print(f'최대점수 = {max}')
+print(f'최소점수 = {min}')
+print(f'80점 이상 = {count}')
