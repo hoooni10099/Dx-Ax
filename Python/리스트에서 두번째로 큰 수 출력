@@ -1,0 +1,15 @@
+# lst = [-7, 2, 3, 8, 6, 6, 75, 38, 3, 2]
+
+# lst.sort()
+
+# print('두 번째로 큰 수 = ', lst[-2])
+
+
+lst = [10.0, 9.0, 8.3, 7.1, 3.0, 9.0]
+
+#lst.sort()
+
+lst.remove(max(lst))
+lst.remove(min(lst))
+
+print(lst)
