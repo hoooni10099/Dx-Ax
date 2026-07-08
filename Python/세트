@@ -1,0 +1,7 @@
+fruit = {'apple', 'banana', 'grape'}
+
+for x in fruit:
+    print(x, end = ' ')
+
+# for x in sorted(fruit, reverse = True):
+#     print(x, end = ' ')
