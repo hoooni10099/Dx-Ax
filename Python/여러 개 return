@@ -1,0 +1,16 @@
+# name = input('이름 : ')
+# age = input('나이 : ')
+
+# print(f'이름은 {name}이고 나이는 {age}입니다.')
+
+def get_info():
+    name = input('이름 : ')
+    age = int(input('나이 : '))
+    return name, age
+    #vlist = [name, age]
+    #return vlist
+
+#alist = get_info()
+#print(f'이름은 {alist[0]}이고 나이는 {alist[1]}살입니다.')
+st_name, st_age = get_info()
+print(f'이름은', st_name, '이고 나이는 ', st_age, '살입니다.')
