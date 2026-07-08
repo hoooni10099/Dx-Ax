@@ -1,0 +1,19 @@
+hlist = []
+
+hlist.append('Iron Man')
+hlist.append('Thor')
+
+print(hlist)
+
+hlist.insert(1, 'Spider Man')
+
+print(hlist)
+
+hlist.pop(0)
+print(hlist)
+
+hlist.remove('Thor')
+print(hlist)
+
+# n = hlist.index('hello')
+# print(n)
