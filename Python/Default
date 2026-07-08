@@ -1,0 +1,12 @@
+# def greet(name, msg = '별일없죠?'):
+#     print('안녕', name + ',' + msg)
+
+# greet('영희')
+
+def printinfo(name, car, price = 20000000):
+    print('name : ', name)
+    print('car : ', car)
+    print('price : ', price)
+
+printinfo('Kim', 'Ford')
+printinfo('Lee', 'Santafe', 500000000)
