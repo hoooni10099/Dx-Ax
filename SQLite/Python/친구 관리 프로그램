@@ -1,0 +1,160 @@
+import sqlite3
+
+def create_table(db_path):
+    conn = None
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        sql = """
+        CREATE TABLE IF NOT EXISTS friend
+        (
+            friend_id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL,
+            num TEXT UNIQUE,
+            email TEXT UNIQUE
+        );
+        """
+
+        cursor.execute(sql)
+        conn.commit()
+        print('friend 테이블 생성 완료')
+
+    except sqlite3.Error as e:
+        print('테이블 생성 실패 :', e)
+
+    finally:
+        if conn:
+            conn.close()
+
+def insert_data(db_path, name, num, email):
+    conn = None
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        sql = 'INSERT INTO friend (name, num, email) VALUES (?, ?, ?);'
+        cursor.execute(sql, (name, num, email))
+        conn.commit()
+        print('친구 추가 완료')
+
+    except sqlite3.Error as e:
+        print('친구 추가 실패 :', e)
+        
+    finally:
+        if conn:
+            conn.close()
+
+def select_table(db_path):
+    sql = """
+    SELECT * FROM friend;
+    """
+
+    conn = None
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute(sql)
+
+        rows = cursor.fetchall()
+
+        print('\n-------------------------------')
+        if not rows:
+            print('등록된 친구가 없습니다.')
+        for row in rows:
+            print(row)
+        print('--------------------------------\n')
+        print('친구 리스트 출력 완료')
+
+    except sqlite3.Error as e:
+        print('리스트 출력 실패 : ', e)
+
+    finally:
+        if conn:
+            conn.close()
+
+def delete_data(db_path, friend_id):
+    conn = None
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        sql = 'DELETE FROM friend WHERE friend_id = ?;'
+        cursor.execute(sql, (friend_id,))
+        conn.commit()
+        if cursor.rowcount > 0:
+            print('친구 삭제 완료')
+        else:
+            print('해당 친구를 찾을 수 없습니다.')
+    except sqlite3.Error as e:
+        print('친구 삭제 실패 : ', e)
+    finally:
+        if conn:
+            conn.close()
+
+def update_data(db_path, friend_id, new_name):
+    conn = None
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        sql = 'UPDATE friend SET name = ? WHERE friend_id = ?;'
+        cursor.execute(sql, (new_name, friend_id))
+        conn.commit()
+        if cursor.rowcount > 0:
+            print('친구 이름 변경 완료')
+        else:
+            print('해당 친구를 찾을 수 없습니다.')
+    except sqlite3.Error as e:
+        print('친구 이름 변경 실패 : ', e)
+    finally:
+        if conn:
+            conn.close()
+
+def main():
+    DB_FILE_PATH = "/home/smart/work/dbfiles/friend.db"
+    create_table(DB_FILE_PATH)
+
+    while True:
+        print('\n[ 메뉴를 선택하세요 ]')
+        print('1. 친구 리스트 출력')
+        print('2. 친구 추가')
+        print('3. 친구 삭제')
+        print('4. 이름 변경')
+        print('0. 종료')
+
+        menu = input('메뉴를 선택하세요 : ').strip()
+
+        if menu == '1':
+            select_table(DB_FILE_PATH)
+
+        elif menu == '2':
+            print('\n---- 새 친구 추가 ----')
+            name = input('이름을 입력하시오 : ')
+            num = input('전화 번호를 입력하시오 : ')
+            email = input('이메일을 입력하시오 : ')
+            insert_data(DB_FILE_PATH, name, num, email)
+        
+        elif menu == '3':
+            select_table(DB_FILE_PATH)
+            friend_id = input('삭제할 친구의 ID를 입력하시요 : ')
+            if friend_id.isdigit():
+                delete_data(DB_FILE_PATH, int(friend_id))
+            else:
+                print('숫자 ID를 입력하시오.')
+            
+        elif menu == '4':
+            select_table(DB_FILE_PATH)
+            friend_id = input('이름을 변경할 친구의 ID를 입력하시오 : ')
+            new_name = input('새로운 이름을 입력하시오 : ')
+            if friend_id.isdigit():
+                update_data(DB_FILE_PATH, int(friend_id), new_name)
+            else:
+                print('숫자 ID를 입력하시오.')
+        
+        elif menu == '0':
+            print('\n프로그램을 종료합니다.')
+            break
+
+        else:
+            print('\n잘못된 선택입니다. 다시 선택해주세요.')
+
+if __name__ == "__main__":
+    main()
