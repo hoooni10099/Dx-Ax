@@ -1,0 +1,11 @@
+def triple_add(a, b, c):
+    sum = a + b + c
+    return sum
+
+if __name__ == '__main__':
+    
+    a = int(input(''))
+    b = int(input(''))
+    c = int(input(''))
+    result = triple_add(a, b, c)
+    print('sum = ', result)
