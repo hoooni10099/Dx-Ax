@@ -1,0 +1,11 @@
+dict = {'이름' : '홍길동', '나이' : 25, '직업' : '개발자'}
+
+print(dict['이름'])
+print(dict['나이'])
+print(dict['직업'])
+
+for i in dict.keys():
+    print(i)
+
+for j in dict.values():
+    print(j)
