@@ -1,0 +1,45 @@
+<SQLite3 가이드>
+
+1. Power Shell -> wsl -d Ubuntu(우분투 접속)
+
+2. sudo apt install sqlite3 (설치 확인 : which sqlite3 / sqlite3 --version)
+
+3. sqlite3 -> SQLite 실행
+
+4. .quit / .exit -> 종료
+
+5. sudo apt install libsqlite3-dev -> C 언어에서 SQLite API를 사용하기 위한 개발 라이브러리
+
+6. sudo dpkg -L libsqlite3-dev -> 설치 확인
+
+7. sqlite3 products.db -> db 생성 및 접속
+
+8. 다시 PowerShell에 Ubuntu로 돌아와서 cd ~ 로 이동
+
+9. nano .sqliterc
+
+10. .header on
+    .mode table
+    .nullvalue NULL
+    .timer on
+    PRAGMA foreign_keys;
+    5가지 내용 추가 후 저장 (Ctrl + s -> Ctrl + x)
+    원활한 db 작업을 위한 sql 초기 설정
+
+11. VS Code로 돌아와서
+    
+12. 명령 팔레트 tasks -> 작업기본빌드작업구성 -> gcc 기본 빌드작업으로 표시되어 있습니다. 선택하면 -> tasks.json 파일
+   
+13. "${fileDirname}/${fileBasenameNoExtension}", "-lsqlite3"
+    위와 같이 뒷부분에 내용 추가
+
+
+
+PostgreSQL
+
+Nas - Mariadb -> mp3 나만의 멜론
+
+ON DELETE CASCADE와 같은 명령어 사용할 때 신중하게 생각하고 사용
+이 프로젝트에서 테이블들을 한꺼번에 삭제해도 되는가?
+
+컬럼을 한두개 더 추가해 놓고 테이블을 만들어서 나중에 컬럼을 더 추가할 때 어려움을 겪지 않게 미리 추가해서 만들어 놓기
