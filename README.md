@@ -39,7 +39,6 @@ plc 자격증
 AICE
 
 ##관련 용어 및 홈페이지
-Beckhoff
 마크다운
 Onlinegdb
 Wokwi
