@@ -1,0 +1,16 @@
+# def modify(list):
+#     for i in range(len(list)):
+#         list[i] = list[i] * 1.3
+
+# list = [200, 250, 300, 280, 500]
+# modify(list)
+# print(list)
+
+def modify(list):
+    salary2 = []
+    for i in list:
+        salary2.append(i * 1.3)
+    return salary2
+
+salary = [200, 250, 300, 280, 500]
+print(modify(salary))
