@@ -1,0 +1,13 @@
+class Car:
+    def __init__(self, speed, color, model):
+        self.speed = speed
+        self.color = color
+        self.model = model
+    
+    def print(self):
+        print(f'자동차의 속도는 {self.speed}')
+        print(f'자동차의 색상은 {self.color}')
+        print(f'자동차의 모델은 {self.model}')
+
+my_car = Car(60, 'blue', 'Ford')
+my_car.print()
