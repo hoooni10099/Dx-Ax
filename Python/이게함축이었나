@@ -1,0 +1,21 @@
+# # # num = [2 * x for x in range(1, 11)]
+# # # print(num)
+
+
+# # scores = [55, 80, 43, 90, 72, 61]
+# # pf = ['합격' if i >= 60 else '불합격' for i in scores]
+# # print(pf)
+
+
+
+
+# inspection = [0, 1, 0, 0, 1, 1, 0, 1]
+# error = [idx for idx, val in enumerate(inspection) if val ==1]
+# print(error)
+
+
+
+words = ['python', 'sql', 'ai', 'streamlit', 'db', 'factory']
+
+trans = [i.upper() for i in words if len(i) >= 5]
+print(trans)
