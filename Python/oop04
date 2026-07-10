@@ -1,0 +1,36 @@
+# class Car:
+#     def __init__(self):
+#         self.brand = '차'
+#         self.speed = 0
+    
+#     def brand_print(self):
+#         print(f'지금 차의 브랜드 = {self.brand}')
+#     def speed_print(self):
+#         print(f'현재 차의 속도 = {self.speed}')
+
+# #main 객체마을 -> 시간이 흐른다.
+# my_car = Car() # 생성자를 사용하면 객체가 탄생
+# my_car.brand = 'BMW' # 생성 후 초기화
+# my_car.speed = 160
+# my_car.brand_print()
+# my_car.speed_print()
+
+class Car:
+    def __init__(self, brand = '차', speed = 0):
+        self.brand = brand
+        self.speed = speed
+    
+    def brand_print(self):
+        print(f'지금 차의 브랜드 = {self.brand}')
+    def speed_print(self):
+        print(f'현재 차의 속도 = {self.speed}')
+
+#main 객체마을 -> 시간이 흐른다.
+my_car = Car('BMW', 200) # 생성자를 사용하면 객체가 탄생
+#my_car.brand = 'BMW' # 생성 후 초기화
+#my_car.speed = 160
+my_car.brand_print()
+my_car.speed_print()
+hong_car = Car('벤츠')
+hong_car.brand_print()
+hong_car.speed_print()
