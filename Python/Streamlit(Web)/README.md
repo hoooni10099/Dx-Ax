@@ -20,7 +20,7 @@ python3 -m pip --version
 
 pip가 없다면?
 -----------------------------------------------------------
-sudo apt install python3-pip
+sudo apt install python3-pip\n
 
 가상환경에서 프로젝트별로 Python 패키지를 독립적으로 관리
 
