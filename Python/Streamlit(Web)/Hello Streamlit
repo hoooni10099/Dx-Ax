@@ -1,0 +1,10 @@
+import streamlit as st
+
+st.title('Hello Streamlit')
+
+st.write('Streamlit 설치가 완료되었습니다.')
+
+
+웹사이트 실행
+1. VS code에서 py파일 우클릭 Run with Streamlit
+2. PowerShell에서 streamlit run @@@.py
