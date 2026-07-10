@@ -126,3 +126,5 @@ ERD
 erwin, DA#, drawdb
 
 SOA 객체지향?
+
+solid 원칙 / 디자인 패턴
