@@ -1,0 +1,33 @@
+# class Student:
+#     def __init__(self, name = None, age = 0):
+#         self.__name = name
+#         self.__age = age
+
+# hong = Student()
+# hong.__name = '홍길동' # 직접 접근
+#print(hong.__age)
+
+
+
+
+class Student:
+    def __init__(self, name = '학생', age = 18):
+        self.__name = name
+        self.__age = age
+
+    def get_age(self):
+            return self.__age
+    def get_name(self):
+            return self.__name
+    def set_age(self, age):
+            self.__age = age
+    def set_name(self, name):
+            self.__name = name
+        
+        
+hong = Student()
+hong.set_name('이순신')
+hong.set_age(40)
+
+print(hong.get_age()) # 간접 접근
+print(hong.get_name())
