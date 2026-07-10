@@ -84,8 +84,6 @@ MES = ERP + 공정관리
 
 kafka, hadoop
 
-scada -> mes
-
 python으로 작은 mes를 만들어 운영해 봐라. 그 다음 c,  c++ 이상으로 발전
 
 GRAFANA
