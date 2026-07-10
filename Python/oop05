@@ -1,0 +1,13 @@
+class Circle:
+    def __init__(self, radius):
+        self.radius = radius
+
+    def getArea(self):
+        print(f'원의 면적 : {round(3.141592 * self.radius ** 2, 2)}')
+
+    def getPrimeter(self):
+        print(f'원의 둘레 : {round(2 * 3.141592 * self.radius, 2)}')
+
+r = Circle(10)
+r.getArea()
+r.getPrimeter()
