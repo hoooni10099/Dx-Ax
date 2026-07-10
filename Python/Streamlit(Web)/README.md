@@ -8,6 +8,8 @@ Streamlit
 
 웹 화면
 
+
+
 파이썬 설치 확인
 python3 --version
 
