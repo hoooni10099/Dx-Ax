@@ -1,0 +1,14 @@
+class Counter:
+    #생성자 만들기
+    def __init__(self, initValue = 0):
+        self.count = initValue # 변수 선언
+    
+    #멤버 메소드 만들기
+    def increment(self):
+        self.count += 1
+
+a = Counter(150)
+a.increment()
+print(a.count)
+b = Counter()
+print(b.count)
