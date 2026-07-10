@@ -51,6 +51,6 @@ streamlit hello
 
 가상환경에서 작업할 때 마다 잊지말고 할 것
 -------------------------------------------------
-streamlit streamlit runner 확장파일 설치 보기 - 명령 팔레트 - 인터프리터 선택 - 찾기 - 가상환경 만들어 놓은 곳 - 안에 bin 파일 - 안에 python3 선택 콘솔이랑 터미널도 다 가상환경에 맞춰주고 app.py 오른쪽 마우스 통합 터미널에서 열기 다시 오른쪽 run with streamlit
+streamlit streamlit runner 확장파일 설치 보기 - 명령 팔레트 - 인터프리터 선택 - 찾기 - 가상환경 만들어 놓은 곳 - 안에 bin 파일 - 안에 python3 선택(VS Code 우하단에서 Interpreter 설정 가능) 콘솔이랑 터미널도 다 가상환경에 맞춰주고 app.py 오른쪽 마우스 통합 터미널에서 열기 다시 오른쪽 run with streamlit
 
 인터프리터, 콘솔, 터미널 다 가상환경 만들어 놓은 데 맞춰
