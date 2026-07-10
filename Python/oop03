@@ -1,0 +1,15 @@
+class Student: # 객체 만들 때 사용
+    def __init__(self, id = 0, name = '학생', major = '컴퓨터공학'):
+        self.id = id
+        self.name = name
+        self.major = major
+
+    def my_print(self):
+        print(f'id : {self.id}, name : {self.name}, major : {self.major}')
+hong = Student()
+lee = Student(2, '이순신', '기계공학')
+lee.my_print()
+# hong.id = 1
+# hong.name = '홍길동'
+# hong.major = '전자공학'
+hong.my_print()
