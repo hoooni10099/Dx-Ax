@@ -1,0 +1,13 @@
+a = input('문자열을 입력하시오 : ')
+
+dic = {'digits' : 0, 'spaces' : 0, 'alphas' : 0}
+
+for i in a:
+    if i.isdigit():
+        dic['digits'] += 1
+    if i.isspace():
+        dic['spaces'] += 1
+    if i.isalpha():
+        dic['alphas'] += 1
+
+print(dic)
