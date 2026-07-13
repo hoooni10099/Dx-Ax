@@ -130,3 +130,5 @@ Java Spring(boot)
 바이브 코딩(카파시)
 
 메카트로닉스 공학
+
+Bom, Lot
