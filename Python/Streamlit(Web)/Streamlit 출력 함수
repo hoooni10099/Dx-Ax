@@ -1,0 +1,48 @@
+import streamlit as st
+
+st.title("스마트팩토리 MES")
+
+st.header("회사 소개")
+
+st.subheader("AI 사업부")
+
+st.write("안녕하세요.")
+
+sales = 3500
+st.write(sales)
+
+items = ["PLC", "MES", "SCADA"]
+st.write(items)
+
+st.markdown("# 제목")
+st.markdown("**스마트팩토리**")
+st.markdown("*Python*")
+st.markdown("""
+- MES
+- SCADA
+- ERP
+""")
+st.markdown("""
+1. 생산관리
+2. 품질관리
+3. 설비관리
+""")
+st.markdown("> Streamlit은 매우 빠른 웹 개발 도구입니다.")
+st.markdown("---")
+
+code = '''
+for i in range(5):
+    print(i)
+'''
+st.code(code)
+
+st.code(code, language="python")
+
+sql = '''
+SELECT *
+FROM customers;
+'''
+st.code(sql, language="sql")
+
+st.caption("Version 1.0")
+
