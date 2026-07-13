@@ -13,6 +13,16 @@ Streamlit은 Default 환경에서 설치 안된다.
 무조건 가상환경을 이용해서
 
 
+requirements.txt 만들기
+
+pip freeze > requirements.txt
+
+
+다른 컴퓨터에서 같은 환경을 만들 때
+
+pip install -r requirements.txt
+
+
 -------------------------------
 파이썬 설치 확인
 ----------------------
