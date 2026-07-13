@@ -44,7 +44,7 @@ cospro
 ##관련 용어 및 홈페이지
 마크다운
 Mes - 미라콤
-Refactoring guru
+guru
 
 트위니
 
