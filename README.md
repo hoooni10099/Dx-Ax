@@ -51,8 +51,6 @@ TSDB/InffluxDB
 Docker를 이용해서 노트북에서 운용
 Grafana
 
-FastAPI
-
 apache2 -> 웹서버
 로그 데이터
 
