@@ -1,0 +1,73 @@
+import streamlit as st
+
+st.title("직원 등록")
+
+st.markdown("---")
+
+emp_name = st.text_input(
+    "직원 이름",
+    placeholder="이름을 입력하세요."
+)
+
+emp_no = st.number_input(
+    "사번",
+    min_value=1000,
+    step=1
+)
+
+hire_date = st.date_input("입사일")
+
+gender = st.radio(
+    "성별",
+    [
+        "남성",
+        "여성"
+    ]
+)
+
+department = st.selectbox(
+    "부서",
+    [
+        "생산팀",
+        "품질팀",
+        "설비팀",
+        "AI개발팀",
+        "경영지원팀"
+    ]
+)
+
+skills = st.multiselect(
+    "보유 기술",
+    [
+        "Python",
+        "SQL",
+        "PLC",
+        "OpenCV",
+        "ROS",
+        "Linux"
+    ]
+)
+
+career = st.slider(
+    "경력(년)",
+    0,
+    30,
+    1
+)
+
+is_active = st.checkbox(
+    "현재 재직 중"
+)
+
+st.markdown("---")
+
+st.header("입력 결과")
+
+st.write("직원명 :", emp_name)
+st.write("사번 :", emp_no)
+st.write("입사일 :", hire_date)
+st.write("성별 :", gender)
+st.write("부서 :", department)
+st.write("보유기술 :", skills)
+st.write("경력 :", career)
+st.write("재직여부 :", is_active)
