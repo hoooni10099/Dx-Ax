@@ -43,10 +43,6 @@ cospro
 
 ##관련 용어 및 홈페이지
 마크다운
-Onlinegdb
-Wokwi
-Devops
-ci/cd
 ROS
 Mes - 미라콤
 Refactoring guru
