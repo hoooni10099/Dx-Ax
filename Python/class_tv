@@ -1,0 +1,25 @@
+class Television:
+    def __init__(self, channel, volume, on):
+        self.channel = channel
+        self.volume = volume
+        self.on = on
+
+    def show(self):
+        print(self.channel, self.volume, self.on)
+
+# class App:
+#     def __init__(self):
+#         pass
+#     def setSilentMode(t):
+#         t.volume = 2
+
+def setSilentMode(t):
+    t.volume = 2
+
+#Television() # default 생성자/인자가 3개 있으니 이 생성자를 사용하면 에러
+#myTv2 = Television() # Error
+myTv = Television(11, 10, True)
+setSilentMode(myTv)
+# app = App()
+# app.setSilentMode(myTv)
+myTv.show()
