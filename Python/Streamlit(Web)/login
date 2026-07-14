@@ -1,0 +1,18 @@
+import streamlit as st
+
+st.title("MES 로그인")
+
+st.markdown("---")
+
+with st.form("login"):
+    user_id = st.text_input("아이디")
+    password = st.text_input("비밀번호", type="password")
+    login = st.form_submit_button("로그인")
+
+if login:
+
+    if user_id == "admin" and password == "1234":
+        st.success("로그인 성공")
+
+    else:
+        st.error("아이디 또는 비밀번호가 올바르지 않습니다.")
