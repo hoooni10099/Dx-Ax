@@ -133,3 +133,5 @@ Bom, Lot
 (erp + sap) -> Java
 
 QCD 달성
+
+백트래킹 알고리즘
