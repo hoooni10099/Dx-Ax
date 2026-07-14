@@ -1,0 +1,63 @@
+import streamlit as st
+import pandas as pd
+
+data = pd.DataFrame(
+    {
+        "날짜":[1,2,3,4,5],
+        "생산량":[120,135,150,142,160]
+    }
+)
+
+st.line_chart(
+    data,
+    x="날짜",
+    y="생산량"
+)
+
+data2 = pd.DataFrame(
+    {
+        "부서":["생산", "품질", "설비"],
+
+        "직원수":[30, 12, 15]
+    }
+)
+
+data3 = pd.DataFrame(
+    {
+        "온도":[
+            20,
+            25,
+            30,
+            35,
+            40
+        ],
+
+        "불량수":[
+            1,
+            2,
+            3,
+            5,
+            8
+        ]
+    }
+)
+
+
+st.area_chart(
+    data,
+    x="날짜",
+    y="생산량"
+)
+
+st.bar_chart(
+    data2,
+    x="부서",
+    y="직원수",
+    color = "green"
+)
+
+st.scatter_chart(
+    data3,
+    x="온도",
+    y="불량수"
+)
