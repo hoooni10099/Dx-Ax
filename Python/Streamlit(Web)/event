@@ -1,0 +1,24 @@
+import streamlit as st
+
+name = st.text_input('이름')
+
+if st.button('확인'):
+    st.write('입력한 이름 : ', name)
+
+if st.button("등록"):
+    st.write("등록")
+
+if st.button("삭제"):
+    st.write("삭제")
+
+if st.button("수정"):
+    st.write("수정")
+
+with st.form("employee"):
+
+    name = st.text_input("이름")
+
+    age = st.number_input("나이")
+
+    submit = st.form_submit_button("등록")
+    st.write('등록된 정보 : ', name, age)
