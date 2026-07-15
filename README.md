@@ -49,7 +49,6 @@ Mes - 미라콤
 
 TSDB/InffluxDB
 Docker를 이용해서 노트북에서 운용
-Grafana
 
 apache2 -> 웹서버
 로그 데이터
@@ -77,8 +76,6 @@ MES = ERP + 공정관리
 kafka, hadoop
 
 python으로 작은 mes를 만들어 운영해 봐라. 그 다음 c,  c++ 이상으로 발전
-
-GRAFANA
 
 데이터 파이프라이너 겸
 
