@@ -1,0 +1,51 @@
+[dbdiagram.io]
+
+Table item {
+  item_id integer [primary key]
+  item_code text
+  item_name text
+  item_type text
+  unit text
+  is_active text
+}
+
+Table production {
+  production_id integer [primary key]
+  production_no text
+  item_id integer
+  output_lot_id integer
+  production_date text
+  qty real
+  status text
+}
+
+Table production_material {
+  production_material_id integer [primary key]
+  production_id integer
+  material_item_id integer
+  material_lot_id integer
+  qty real
+}
+
+Table lot {
+  lot_id integer [primary key]
+  lot_no text
+  item_id integer
+  lot_type text
+  qty real
+  received_date text
+  produced_date text
+  expire_date text
+}
+
+Ref is_produced: item.item_id < production.item_id
+
+Ref has: item.item_id < lot.item_id
+
+Ref output_lot: lot.lot_id - production.output_lot_id
+
+Ref material_item: item.item_id < production_material.material_item_id
+
+Ref material_lot: lot.lot_id < production_material.material_lot_id
+
+
