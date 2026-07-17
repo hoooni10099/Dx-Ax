@@ -1,1 +1,7 @@
 주문량, 재고량, 마감기한, 공장, 담당자, 부품, LOT, 배송지, 택배사, 제품명, 
+
+Docker
+
+Streamlit
+
+PostgreSQL
