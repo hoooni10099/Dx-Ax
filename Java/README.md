@@ -1,10 +1,12 @@
-sudo apt install -y curl wget unzip zip build-essential
-
 sudo apt install -y openjdk-21-jdk
 
 
 java -version
 javac -version
+
+readlink -f "$(which java)"
+
+/usr/lib/jvm/java-21-openjdk-amd64/bin/java
 
 
 nano ~/.bashrc
