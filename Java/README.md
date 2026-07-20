@@ -1,1 +1,20 @@
-d
+sudo apt install -y curl wget unzip zip build-essential
+
+sudo apt install -y openjdk-21-jdk
+
+
+java -version
+javac -version
+
+
+nano ~/.bashrc
+
+->export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+export PATH="$JAVA_HOME/bin:$PATH"
+<내용 추가>
+
+source ~/.bashrc
+-> 적용
+
+vs code에서 Java확장 프로그램 설치
+
