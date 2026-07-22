@@ -6,4 +6,4 @@ Streamlit
 
 PostgreSQL
 
-Streamlit으로 웹 만들 때 가상환경 안에서 만들었는데, 그럼 db와 연동시킬 때도 가상환경 안에서 SQLite로 db를 만들어야 하는건지?
+업무를 Query로 만들어라.
