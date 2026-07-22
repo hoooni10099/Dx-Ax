@@ -13,7 +13,7 @@ def get_connection() -> sqlite3.Connection: # DB 연결 생성
         raise FileNotFoundError(f"SQLite 데이터베이스 파일을 찾을 수 없습니다: {DB_PATH}")
 
     connection = sqlite3.connect(DB_PATH)
-    connection.row_factory = sqlite3.Row
+    connection.row_factory = sqlite3.Row # 컬럼명으로 접근 가능
     connection.execute("PRAGMA foreign_keys = ON")
     return connection
 
