@@ -1,17 +1,12 @@
-
 from pathlib import Path
 import sqlite3
-
 import pandas as pd
 
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-DB_PATH = BASE_DIR / "sql" / "mini_mes.db"
-
+BASE_DIR = Path(__file__).resolve().parent.parent # mes 폴더(조절해서 맞춰)
+DB_PATH = BASE_DIR/'sql'/'mini_mes.db'
 
 def database_exists() -> bool:
     return DB_PATH.exists()
-
 
 def get_connection() -> sqlite3.Connection:
     if not database_exists():
@@ -22,12 +17,10 @@ def get_connection() -> sqlite3.Connection:
     connection.execute("PRAGMA foreign_keys = ON")
     return connection
 
-
 def fetch_dataframe(sql: str, params: tuple = ()) -> pd.DataFrame:
-    with get_connection() as connection:
-        return pd.read_sql_query(sql, connection, params=params)
-
-
+    with get_connection() as conn:
+        return pd.read_sql_query(sql, conn, params = params)
+    
 def fetch_one(sql: str, params: tuple = ()) -> sqlite3.Row | None:
     with get_connection() as connection:
         cursor = connection.execute(sql, params)
