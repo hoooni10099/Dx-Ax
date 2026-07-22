@@ -6,10 +6,12 @@ import streamlit as st
 from src.db import DB_PATH, database_exists
 
 
+# 페이지 설정과 기본 제목
 def setup_page(title: str):
     st.set_page_config(page_title=f"Mini MES - {title}", layout="wide")
 
 
+# 학습 목표, 관련 테이블, 작업 안내 표시
 def page_title(title: str, description: str, tables: str, task: str):
     st.title(title)
     st.info(
@@ -22,7 +24,7 @@ def page_title(title: str, description: str, tables: str, task: str):
         """
     )
 
-
+# DB 파일 존재 여부 표시
 def show_database_status():
     if database_exists():
         st.success(f"데이터베이스 연결 대상: {DB_PATH}")
@@ -30,11 +32,12 @@ def show_database_status():
         st.error(f"데이터베이스 파일을 찾을 수 없습니다: {DB_PATH}")
 
 
+# DataFrame이 비었을 때 경고 표시
 def show_dataframe(df: pd.DataFrame, empty_message: str = "조건에 해당하는 데이터가 없습니다."):
     if df.empty:
         st.warning(empty_message)
-        return
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    else:
+        st.dataframe(df, use_container_width=True)
 
 
 def metric_row(values: list[tuple[str, object]]):
