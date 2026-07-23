@@ -20,3 +20,6 @@ source ~/.bashrc
 
 vs code에서 Java확장 프로그램 설치
 
+
+
+보기 - 명령 팔레트 - Create Java Project - Maven - No Archetype - com.example - demo - 경로 설정
