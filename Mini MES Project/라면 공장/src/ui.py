@@ -117,3 +117,8 @@ def row_options(rows: list, label_fields: tuple[str, ...], value_field: str) -> 
         label = " | ".join(str(row[field]) for field in label_fields)
         result[label] = int(row[value_field])
     return result
+
+def row_to_dict(row):
+    if row is None:
+        return {}
+    return {key: row[key] for key in row.keys()}
