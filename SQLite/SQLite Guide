@@ -22,7 +22,7 @@
     .mode table
     .nullvalue NULL
     .timer on
-    PRAGMA foreign_keys;
+    PRAGMA foreign_keys = on;
     5가지 내용 추가 후 저장 (Ctrl + s -> Ctrl + x)
     원활한 db 작업을 위한 sql 초기 설정
 
