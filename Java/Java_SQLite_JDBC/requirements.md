@@ -4,3 +4,4 @@ VACUUM;
 
 sudo apt install maven
 
+pom 파일에 dependencies 내용 추가 -> 드라이브 까는거
