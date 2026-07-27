@@ -45,3 +45,38 @@ CREATE TABLE material_lot (material_lot_id INTEGER PRIMARY KEY,
                            status TEXT NOT NULL DEFAULT 'AVAILABLE' CHECK (status IN ('AVAILABLE', 'EXHAUSTED', 'BLOCKED')),
                            created_atTEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                            FOREIGN KEY (material_item_id) REFERENCES item (item_id));
+
+
+CREATE TABLE work_order (work_order_id INTEGER PRIMARY KEY,
+             work_order_no TEXT NOT NULL UNIQUE,
+             product_item_id INTEGER NOT NULL,
+             planned_qty INTEGER NOT NULL CHECK (planned_qty > 0),
+             status TEXT NOT NULL DEFAULT 'PLANNED' CHECK (status IN ('PLANNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED')),
+             due_date TEXT NOT NULL,
+             started_at TEXT,
+             completed_at TEXT,
+             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+             FOREIGN KEY (product_item_id) REFERENCES item(item_id));
+
+
+CREATE TABLE product_serial (product_serial_id INTEGER PRIMARY KEY,
+                             serial_no TEXT NOT NULL UNIQUE,
+                             work_order_id INTEGER NOT NULL,
+                             status TEXT NOT NULL DEFAULT 'CREATED' CHECK (status IN ('CREATED', 'IN_PROGRESS', 'PASS', 'FAIL')),
+                             started_at TEXT,
+                             completed_at TEXT,
+                             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                             FOREIGN KEY(work_order_id) REFERENCES work_order(work_order_id));
+
+
+CREATE TABLE process_history(process_history_id INTEGER PRIMARY KEY,
+                             product_serial_id INTEGER NOT NULL,
+                             routing_step_id INTEGER NOT NULL,
+                             result TEXT CHECK (result IN ('PASS', 'FAIL')),
+                             started_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                             completed_at TEXT,
+                             remark TEXT,
+                             FOREIGN KEY(product_serial_id) REFERENCES product_serial(product_serial_id),
+                             FOREIGN KEY(routing_step_id) REFERENCES routing_step(routing_step_id),
+                             UNIQUE(product_serial_id, routing_step_id));
+
