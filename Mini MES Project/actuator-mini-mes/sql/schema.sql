@@ -108,3 +108,6 @@ CREATE TABLE eol_test_result (eol_test_result_id INTEGER PRIMARY KEY,
                               tested_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                               FOREIGN KEY (process_history_id) REFERENCES process_history(process_history_id),
                               UNIQUE(process_history_id));
+
+
+SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name;
