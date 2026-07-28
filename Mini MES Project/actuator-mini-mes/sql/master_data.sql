@@ -149,7 +149,264 @@ JOIN item AS i
     ON i.item_id = rs.product_item_id
 GROUP BY i.item_code
 ORDER BY i.item_code;
+------------------------------------
+
+
+-- bom TABLE
+-- ACT-Basic BOM
+INSERT INTO bom (
+    product_item_id,
+    material_item_id,
+    input_routing_step_id,
+    required_qty,
+    created_at
+)
+VALUES
+    (
+        (SELECT item_id
+         FROM item
+         WHERE item_code = 'ACT-BASIC'),
+
+        (SELECT item_id
+         FROM item
+         WHERE item_code = 'MAT-MOTOR'),
+
+        (
+            SELECT rs.routing_step_id
+            FROM routing_step AS rs
+            JOIN item AS i
+                ON i.item_id = rs.product_item_id
+            JOIN process AS p
+                ON p.process_id = rs.process_id
+            WHERE i.item_code = 'ACT-BASIC'
+              AND p.process_code = 'PROC-MOTOR'
+        ),
+
+        1,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        (SELECT item_id
+         FROM item
+         WHERE item_code = 'ACT-BASIC'),
+
+        (SELECT item_id
+         FROM item
+         WHERE item_code = 'MAT-HOUSING'),
+
+        (
+            SELECT rs.routing_step_id
+            FROM routing_step AS rs
+            JOIN item AS i
+                ON i.item_id = rs.product_item_id
+            JOIN process AS p
+                ON p.process_id = rs.process_id
+            WHERE i.item_code = 'ACT-BASIC'
+              AND p.process_code = 'PROC-MOTOR'
+        ),
+
+        1,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        (SELECT item_id
+         FROM item
+         WHERE item_code = 'ACT-BASIC'),
+
+        (SELECT item_id
+         FROM item
+         WHERE item_code = 'MAT-GEAR'),
+
+        (
+            SELECT rs.routing_step_id
+            FROM routing_step AS rs
+            JOIN item AS i
+                ON i.item_id = rs.product_item_id
+            JOIN process AS p
+                ON p.process_id = rs.process_id
+            WHERE i.item_code = 'ACT-BASIC'
+              AND p.process_code = 'PROC-GEAR'
+        ),
+
+        1,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        (SELECT item_id
+         FROM item
+         WHERE item_code = 'ACT-BASIC'),
+
+        (SELECT item_id
+         FROM item
+         WHERE item_code = 'MAT-PCB'),
+
+        (
+            SELECT rs.routing_step_id
+            FROM routing_step AS rs
+            JOIN item AS i
+                ON i.item_id = rs.product_item_id
+            JOIN process AS p
+                ON p.process_id = rs.process_id
+            WHERE i.item_code = 'ACT-BASIC'
+              AND p.process_code = 'PROC-PCB'
+        ),
+
+        1,
+        CURRENT_TIMESTAMP
+    );
+
+-- ACT-Sensor BOM
+INSERT INTO bom (
+    product_item_id,
+    material_item_id,
+    input_routing_step_id,
+    required_qty,
+    created_at
+)
+VALUES
+    (
+        (SELECT item_id
+         FROM item
+         WHERE item_code = 'ACT-SENSOR'),
+
+        (SELECT item_id
+         FROM item
+         WHERE item_code = 'MAT-MOTOR'),
+
+        (
+            SELECT rs.routing_step_id
+            FROM routing_step AS rs
+            JOIN item AS i
+                ON i.item_id = rs.product_item_id
+            JOIN process AS p
+                ON p.process_id = rs.process_id
+            WHERE i.item_code = 'ACT-SENSOR'
+              AND p.process_code = 'PROC-MOTOR'
+        ),
+
+        1,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        (SELECT item_id
+         FROM item
+         WHERE item_code = 'ACT-SENSOR'),
+
+        (SELECT item_id
+         FROM item
+         WHERE item_code = 'MAT-HOUSING'),
+
+        (
+            SELECT rs.routing_step_id
+            FROM routing_step AS rs
+            JOIN item AS i
+                ON i.item_id = rs.product_item_id
+            JOIN process AS p
+                ON p.process_id = rs.process_id
+            WHERE i.item_code = 'ACT-SENSOR'
+              AND p.process_code = 'PROC-MOTOR'
+        ),
+
+        1,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        (SELECT item_id
+         FROM item
+         WHERE item_code = 'ACT-SENSOR'),
+
+        (SELECT item_id
+         FROM item
+         WHERE item_code = 'MAT-GEAR'),
+
+        (
+            SELECT rs.routing_step_id
+            FROM routing_step AS rs
+            JOIN item AS i
+                ON i.item_id = rs.product_item_id
+            JOIN process AS p
+                ON p.process_id = rs.process_id
+            WHERE i.item_code = 'ACT-SENSOR'
+              AND p.process_code = 'PROC-GEAR'
+        ),
+
+        1,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        (SELECT item_id
+         FROM item
+         WHERE item_code = 'ACT-SENSOR'),
+
+        (SELECT item_id
+         FROM item
+         WHERE item_code = 'MAT-SENSOR'),
+
+        (
+            SELECT rs.routing_step_id
+            FROM routing_step AS rs
+            JOIN item AS i
+                ON i.item_id = rs.product_item_id
+            JOIN process AS p
+                ON p.process_id = rs.process_id
+            WHERE i.item_code = 'ACT-SENSOR'
+              AND p.process_code = 'PROC-SENSOR'
+        ),
+
+        1,
+        CURRENT_TIMESTAMP
+    ),
+    (
+        (SELECT item_id
+         FROM item
+         WHERE item_code = 'ACT-SENSOR'),
+
+        (SELECT item_id
+         FROM item
+         WHERE item_code = 'MAT-PCB'),
+
+        (
+            SELECT rs.routing_step_id
+            FROM routing_step AS rs
+            JOIN item AS i
+                ON i.item_id = rs.product_item_id
+            JOIN process AS p
+                ON p.process_id = rs.process_id
+            WHERE i.item_code = 'ACT-SENSOR'
+              AND p.process_code = 'PROC-PCB'
+        ),
+
+        1,
+        CURRENT_TIMESTAMP
+    );
 
 
 
+SELECT
+    b.bom_id,
+    product.item_code AS product_code,
+    product.item_name AS product_name,
+    material.item_code AS material_code,
+    material.item_name AS material_name,
+    b.required_qty,
+    rs.sequence_no AS input_sequence,
+    p.process_code AS input_process_code,
+    p.process_name AS input_process_name,
+    b.is_active,
+    b.created_at
+FROM bom AS b
+JOIN item AS product
+    ON product.item_id = b.product_item_id
+JOIN item AS material
+    ON material.item_id = b.material_item_id
+JOIN routing_step AS rs
+    ON rs.routing_step_id = b.input_routing_step_id
+JOIN process AS p
+    ON p.process_id = rs.process_id
+ORDER BY
+    product.item_code,
+    rs.sequence_no,
+    material.item_code;
 
+
+-------------------------------------------
