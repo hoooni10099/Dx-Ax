@@ -410,3 +410,97 @@ ORDER BY
 
 
 -------------------------------------------
+
+
+-- material_lot Table
+INSERT INTO material_lot (
+    lot_no,
+    material_item_id,
+    received_qty,
+    received_date
+)
+VALUES
+    (
+        'LOT-MOTOR-20260701-A',
+        (SELECT item_id FROM item WHERE item_code = 'MAT-MOTOR'),
+        50,
+        '2026-07-01'
+    ),
+    (
+        'LOT-MOTOR-20260715-B',
+        (SELECT item_id FROM item WHERE item_code = 'MAT-MOTOR'),
+        50,
+        '2026-07-15'
+    ),
+    (
+        'LOT-GEAR-20260701-A',
+        (SELECT item_id FROM item WHERE item_code = 'MAT-GEAR'),
+        50,
+        '2026-07-01'
+    ),
+    (
+        'LOT-GEAR-20260715-B',
+        (SELECT item_id FROM item WHERE item_code = 'MAT-GEAR'),
+        50,
+        '2026-07-15'
+    ),
+    (
+        'LOT-HOUSING-20260701-A',
+        (SELECT item_id FROM item WHERE item_code = 'MAT-HOUSING'),
+        50,
+        '2026-07-01'
+    ),
+    (
+        'LOT-HOUSING-20260715-B',
+        (SELECT item_id FROM item WHERE item_code = 'MAT-HOUSING'),
+        50,
+        '2026-07-15'
+    ),
+    (
+        'LOT-PCB-20260701-A',
+        (SELECT item_id FROM item WHERE item_code = 'MAT-PCB'),
+        50,
+        '2026-07-01'
+    ),
+    (
+        'LOT-PCB-20260715-B',
+        (SELECT item_id FROM item WHERE item_code = 'MAT-PCB'),
+        50,
+        '2026-07-15'
+    ),
+    (
+        'LOT-SENSOR-20260701-A',
+        (SELECT item_id FROM item WHERE item_code = 'MAT-SENSOR'),
+        30,
+        '2026-07-01'
+    ),
+    (
+        'LOT-SENSOR-20260715-B',
+        (SELECT item_id FROM item WHERE item_code = 'MAT-SENSOR'),
+        30,
+        '2026-07-15'
+    );
+
+
+SELECT
+    ml.material_lot_id,
+    ml.lot_no,
+    i.item_code,
+    i.item_name,
+    ml.received_qty,
+    ml.received_date,
+    ml.status,
+    ml.created_at
+FROM material_lot AS ml
+JOIN item AS i
+    ON i.item_id = ml.material_item_id
+ORDER BY
+    i.item_code,
+    ml.received_date,
+    ml.material_lot_id;
+
+
+----------------------------------------------------------------------
+
+
+
