@@ -43,7 +43,7 @@ CREATE TABLE material_lot (material_lot_id INTEGER PRIMARY KEY,
                            received_qty INTEGER NOT NULL CHECK (received_qty > 0),
                            received_date TEXT NOT NULL,
                            status TEXT NOT NULL DEFAULT 'AVAILABLE' CHECK (status IN ('AVAILABLE', 'EXHAUSTED', 'BLOCKED')),
-                           created_atTEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                           created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                            FOREIGN KEY (material_item_id) REFERENCES item (item_id));
 
 
