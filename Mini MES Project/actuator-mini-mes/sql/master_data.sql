@@ -503,4 +503,237 @@ ORDER BY
 ----------------------------------------------------------------------
 
 
+-- work_order Table
+INSERT INTO work_order (
+    work_order_no,
+    product_item_id,
+    planned_qty,
+    due_date
+)
+VALUES
+    (
+        'WO-20260728-001',
+        (
+            SELECT item_id
+            FROM item
+            WHERE item_code = 'ACT-BASIC'
+        ),
+        10,
+        '2026-08-05'
+    ),
+    (
+        'WO-20260728-002',
+        (
+            SELECT item_id
+            FROM item
+            WHERE item_code = 'ACT-SENSOR'
+        ),
+        10,
+        '2026-08-07'
+    );
+
+SELECT
+    wo.work_order_id,
+    wo.work_order_no,
+    i.item_code AS product_code,
+    i.item_name AS product_name,
+    wo.planned_qty,
+    wo.status,
+    wo.due_date,
+    wo.started_at,
+    wo.completed_at,
+    wo.created_at
+FROM work_order AS wo
+JOIN item AS i
+    ON i.item_id = wo.product_item_id
+ORDER BY wo.work_order_id;
+
+
+UPDATE work_order
+SET
+    status = 'IN_PROGRESS',
+    started_at = CURRENT_TIMESTAMP
+WHERE work_order_no = 'WO-20260728-001'
+  AND status = 'PLANNED';
+
+UPDATE work_order
+SET
+    status = 'COMPLETED',
+    completed_at = CURRENT_TIMESTAMP
+WHERE work_order_no = 'WO-20260728-001'
+  AND status = 'IN_PROGRESS';
+
+----------------------------------------------
+
+--product_serial Table
+-- 기본형 제품 10개
+INSERT INTO product_serial (
+    serial_no,
+    work_order_id
+)
+VALUES
+    (
+        'BASIC-20260728-001',
+        (SELECT work_order_id
+         FROM work_order
+         WHERE work_order_no = 'WO-20260728-001')
+    ),
+    (
+        'BASIC-20260728-002',
+        (SELECT work_order_id
+         FROM work_order
+         WHERE work_order_no = 'WO-20260728-001')
+    ),
+    (
+        'BASIC-20260728-003',
+        (SELECT work_order_id
+         FROM work_order
+         WHERE work_order_no = 'WO-20260728-001')
+    ),
+    (
+        'BASIC-20260728-004',
+        (SELECT work_order_id
+         FROM work_order
+         WHERE work_order_no = 'WO-20260728-001')
+    ),
+    (
+        'BASIC-20260728-005',
+        (SELECT work_order_id
+         FROM work_order
+         WHERE work_order_no = 'WO-20260728-001')
+    ),
+    (
+        'BASIC-20260728-006',
+        (SELECT work_order_id
+         FROM work_order
+         WHERE work_order_no = 'WO-20260728-001')
+    ),
+    (
+        'BASIC-20260728-007',
+        (SELECT work_order_id
+         FROM work_order
+         WHERE work_order_no = 'WO-20260728-001')
+    ),
+    (
+        'BASIC-20260728-008',
+        (SELECT work_order_id
+         FROM work_order
+         WHERE work_order_no = 'WO-20260728-001')
+    ),
+    (
+        'BASIC-20260728-009',
+        (SELECT work_order_id
+         FROM work_order
+         WHERE work_order_no = 'WO-20260728-001')
+    ),
+    (
+        'BASIC-20260728-010',
+        (SELECT work_order_id
+         FROM work_order
+         WHERE work_order_no = 'WO-20260728-001')
+    );
+
+
+-- 센서형 제품 10개
+INSERT INTO product_serial (
+    serial_no,
+    work_order_id
+)
+VALUES
+    (
+        'SENSOR-20260728-001',
+        (SELECT work_order_id
+         FROM work_order
+         WHERE work_order_no = 'WO-20260728-002')
+    ),
+    (
+        'SENSOR-20260728-002',
+        (SELECT work_order_id
+         FROM work_order
+         WHERE work_order_no = 'WO-20260728-002')
+    ),
+    (
+        'SENSOR-20260728-003',
+        (SELECT work_order_id
+         FROM work_order
+         WHERE work_order_no = 'WO-20260728-002')
+    ),
+    (
+        'SENSOR-20260728-004',
+        (SELECT work_order_id
+         FROM work_order
+         WHERE work_order_no = 'WO-20260728-002')
+    ),
+    (
+        'SENSOR-20260728-005',
+        (SELECT work_order_id
+         FROM work_order
+         WHERE work_order_no = 'WO-20260728-002')
+    ),
+    (
+        'SENSOR-20260728-006',
+        (SELECT work_order_id
+         FROM work_order
+         WHERE work_order_no = 'WO-20260728-002')
+    ),
+    (
+        'SENSOR-20260728-007',
+        (SELECT work_order_id
+         FROM work_order
+         WHERE work_order_no = 'WO-20260728-002')
+    ),
+    (
+        'SENSOR-20260728-008',
+        (SELECT work_order_id
+         FROM work_order
+         WHERE work_order_no = 'WO-20260728-002')
+    ),
+    (
+        'SENSOR-20260728-009',
+        (SELECT work_order_id
+         FROM work_order
+         WHERE work_order_no = 'WO-20260728-002')
+    ),
+    (
+        'SENSOR-20260728-010',
+        (SELECT work_order_id
+         FROM work_order
+         WHERE work_order_no = 'WO-20260728-002')
+    );
+
+
+SELECT
+    ps.product_serial_id,
+    ps.serial_no,
+    wo.work_order_no,
+    i.item_code AS product_code,
+    i.item_name AS product_name,
+    ps.status,
+    ps.started_at,
+    ps.completed_at,
+    ps.created_at
+FROM product_serial AS ps
+JOIN work_order AS wo
+    ON wo.work_order_id = ps.work_order_id
+JOIN item AS i
+    ON i.item_id = wo.product_item_id
+ORDER BY
+    wo.work_order_no,
+    ps.serial_no;
+
+
+SELECT
+    wo.work_order_no,
+    wo.planned_qty,
+    COUNT(ps.product_serial_id) AS serial_count,
+    wo.planned_qty - COUNT(ps.product_serial_id) AS difference
+FROM work_order AS wo
+LEFT JOIN product_serial AS ps
+    ON ps.work_order_id = wo.work_order_id
+GROUP BY
+    wo.work_order_id,
+    wo.work_order_no,
+    wo.planned_qty
+ORDER BY wo.work_order_no;
+
 
