@@ -736,4 +736,410 @@ GROUP BY
     wo.planned_qty
 ORDER BY wo.work_order_no;
 
+--------------------------------------------------------
+
+
+--모터 조립
+INSERT INTO process_history (
+    product_serial_id,
+    routing_step_id
+)
+VALUES (
+    (
+        SELECT product_serial_id
+        FROM product_serial
+        WHERE serial_no = 'BASIC-20260728-001'
+    ),
+    (
+        SELECT rs.routing_step_id
+        FROM routing_step AS rs
+        JOIN item AS i
+            ON i.item_id = rs.product_item_id
+        JOIN process AS p
+            ON p.process_id = rs.process_id
+        WHERE i.item_code = 'ACT-BASIC'
+          AND p.process_code = 'PROC-MOTOR'
+    )
+);
+
+-- 개별 제품과 작업지시도 생산 진행 상태로 변경
+UPDATE product_serial
+SET
+    status = 'IN_PROGRESS',
+    started_at = COALESCE(started_at, CURRENT_TIMESTAMP)
+WHERE serial_no = 'BASIC-20260728-001'
+  AND status = 'CREATED';
+
+UPDATE work_order
+SET
+    status = 'IN_PROGRESS',
+    started_at = COALESCE(started_at, CURRENT_TIMESTAMP)
+WHERE work_order_id = (
+    SELECT work_order_id
+    FROM product_serial
+    WHERE serial_no = 'BASIC-20260728-001'
+)
+AND status = 'PLANNED';
+
+-- 공정 완료
+UPDATE process_history
+SET
+    result = 'PASS',
+    completed_at = CURRENT_TIMESTAMP,
+    remark = '정상 조립 완료'
+WHERE product_serial_id = (
+    SELECT product_serial_id
+    FROM product_serial
+    WHERE serial_no = 'BASIC-20260728-001'
+)
+AND routing_step_id = (
+    SELECT rs.routing_step_id
+    FROM routing_step AS rs
+    JOIN item AS i
+        ON i.item_id = rs.product_item_id
+    JOIN process AS p
+        ON p.process_id = rs.process_id
+    WHERE i.item_code = 'ACT-BASIC'
+      AND p.process_code = 'PROC-MOTOR'
+)
+AND completed_at IS NULL;
+
+--실패
+UPDATE process_history
+SET
+    result = 'FAIL',
+    completed_at = CURRENT_TIMESTAMP,
+    remark = '모터 결선 불량'
+WHERE process_history_id = ?;
+
+
+SELECT
+    ps.serial_no,
+    i.item_code AS product_code,
+    rs.sequence_no,
+    p.process_code,
+    p.process_name,
+    ph.started_at,
+    ph.completed_at,
+    ph.result,
+    ph.remark
+FROM process_history AS ph
+JOIN product_serial AS ps
+    ON ps.product_serial_id = ph.product_serial_id
+JOIN work_order AS wo
+    ON wo.work_order_id = ps.work_order_id
+JOIN item AS i
+    ON i.item_id = wo.product_item_id
+JOIN routing_step AS rs
+    ON rs.routing_step_id = ph.routing_step_id
+JOIN process AS p
+    ON p.process_id = rs.process_id
+ORDER BY
+    ps.serial_no,
+    rs.sequence_no;
+
+
+----------------------------------------------
+
+--material_consumption Table
+
+INSERT INTO material_consumption (
+    product_serial_id,
+    material_lot_id,
+    routing_step_id,
+    consumed_qty
+)
+VALUES
+    (
+        (
+            SELECT product_serial_id
+            FROM product_serial
+            WHERE serial_no = 'BASIC-20260728-001'
+        ),
+        (
+            SELECT material_lot_id
+            FROM material_lot
+            WHERE lot_no = 'LOT-MOTOR-20260701-A'
+        ),
+        (
+            SELECT rs.routing_step_id
+            FROM routing_step AS rs
+            JOIN item AS product
+                ON product.item_id = rs.product_item_id
+            JOIN process AS p
+                ON p.process_id = rs.process_id
+            WHERE product.item_code = 'ACT-BASIC'
+              AND p.process_code = 'PROC-MOTOR'
+        ),
+        1
+    ),
+    (
+        (
+            SELECT product_serial_id
+            FROM product_serial
+            WHERE serial_no = 'BASIC-20260728-001'
+        ),
+        (
+            SELECT material_lot_id
+            FROM material_lot
+            WHERE lot_no = 'LOT-HOUSING-20260701-A'
+        ),
+        (
+            SELECT rs.routing_step_id
+            FROM routing_step AS rs
+            JOIN item AS product
+                ON product.item_id = rs.product_item_id
+            JOIN process AS p
+                ON p.process_id = rs.process_id
+            WHERE product.item_code = 'ACT-BASIC'
+              AND p.process_code = 'PROC-MOTOR'
+        ),
+        1
+    );
+
+
+SELECT
+    mc.consumption_id,
+    ps.serial_no,
+    product.item_code AS product_code,
+    material.item_code AS material_code,
+    material.item_name AS material_name,
+    ml.lot_no,
+    mc.consumed_qty,
+    rs.sequence_no,
+    p.process_code,
+    p.process_name,
+    mc.consumed_at
+FROM material_consumption AS mc
+JOIN product_serial AS ps
+    ON ps.product_serial_id = mc.product_serial_id
+JOIN work_order AS wo
+    ON wo.work_order_id = ps.work_order_id
+JOIN item AS product
+    ON product.item_id = wo.product_item_id
+JOIN material_lot AS ml
+    ON ml.material_lot_id = mc.material_lot_id
+JOIN item AS material
+    ON material.item_id = ml.material_item_id
+JOIN routing_step AS rs
+    ON rs.routing_step_id = mc.routing_step_id
+JOIN process AS p
+    ON p.process_id = rs.process_id
+ORDER BY
+    ps.serial_no,
+    rs.sequence_no,
+    material.item_code;
+
+
+SELECT
+    ml.material_lot_id,
+    ml.lot_no,
+    i.item_code,
+    i.item_name,
+    ml.received_qty,
+    COALESCE(SUM(mc.consumed_qty), 0) AS consumed_qty,
+    ml.received_qty
+        - COALESCE(SUM(mc.consumed_qty), 0) AS remaining_qty,
+    ml.status
+FROM material_lot AS ml
+JOIN item AS i
+    ON i.item_id = ml.material_item_id
+LEFT JOIN material_consumption AS mc
+    ON mc.material_lot_id = ml.material_lot_id
+GROUP BY
+    ml.material_lot_id,
+    ml.lot_no,
+    i.item_code,
+    i.item_name,
+    ml.received_qty,
+    ml.status
+ORDER BY
+    i.item_code,
+    ml.received_date,
+    ml.material_lot_id;
+
+SELECT
+    ps.serial_no,
+    material.item_code,
+    material.item_name,
+    ml.lot_no,
+    mc.consumed_qty,
+    p.process_name,
+    mc.consumed_at
+FROM material_consumption AS mc
+JOIN product_serial AS ps
+    ON ps.product_serial_id = mc.product_serial_id
+JOIN material_lot AS ml
+    ON ml.material_lot_id = mc.material_lot_id
+JOIN item AS material
+    ON material.item_id = ml.material_item_id
+JOIN routing_step AS rs
+    ON rs.routing_step_id = mc.routing_step_id
+JOIN process AS p
+    ON p.process_id = rs.process_id
+WHERE ps.serial_no = 'BASIC-20260728-001'
+ORDER BY
+    rs.sequence_no,
+    material.item_code;
+
+
+SELECT
+    ml.lot_no,
+    material.item_code AS material_code,
+    ps.serial_no,
+    product.item_code AS product_code,
+    wo.work_order_no,
+    p.process_name,
+    mc.consumed_qty,
+    mc.consumed_at,
+    ps.status AS product_status
+FROM material_consumption AS mc
+JOIN material_lot AS ml
+    ON ml.material_lot_id = mc.material_lot_id
+JOIN item AS material
+    ON material.item_id = ml.material_item_id
+JOIN product_serial AS ps
+    ON ps.product_serial_id = mc.product_serial_id
+JOIN work_order AS wo
+    ON wo.work_order_id = ps.work_order_id
+JOIN item AS product
+    ON product.item_id = wo.product_item_id
+JOIN routing_step AS rs
+    ON rs.routing_step_id = mc.routing_step_id
+JOIN process AS p
+    ON p.process_id = rs.process_id
+WHERE ml.lot_no = 'LOT-MOTOR-20260701-A'
+ORDER BY ps.serial_no;
+
+
+--------------------------------------------
+--eol_test_result Table
+
+
+EOL 이전 공정 PASS 완료
+→ EOL process_history 생성
+→ EOL 검사 결과 저장
+→ process_history 완료 처리
+→ 제품 Serial PASS/FAIL 처리
+
+
+SELECT
+    ph.process_history_id,
+    ps.serial_no,
+    p.process_code,
+    p.process_name,
+    ph.started_at,
+    ph.completed_at,
+    ph.result
+FROM process_history AS ph
+JOIN product_serial AS ps
+    ON ps.product_serial_id = ph.product_serial_id
+JOIN routing_step AS rs
+    ON rs.routing_step_id = ph.routing_step_id
+JOIN process AS p
+    ON p.process_id = rs.process_id
+WHERE ps.serial_no = 'BASIC-20260728-001'
+  AND p.process_code = 'PROC-EOL';
+
+
+INSERT INTO process_history (
+    product_serial_id,
+    routing_step_id
+)
+SELECT
+    ps.product_serial_id,
+    rs.routing_step_id
+FROM product_serial AS ps
+JOIN work_order AS wo
+    ON wo.work_order_id = ps.work_order_id
+JOIN routing_step AS rs
+    ON rs.product_item_id = wo.product_item_id
+JOIN process AS p
+    ON p.process_id = rs.process_id
+WHERE ps.serial_no = 'BASIC-20260728-001'
+  AND p.process_code = 'PROC-EOL';
+
+
+SELECT
+    ph.process_history_id,
+    ps.serial_no,
+    p.process_code
+FROM process_history AS ph
+JOIN product_serial AS ps
+    ON ps.product_serial_id = ph.product_serial_id
+JOIN routing_step AS rs
+    ON rs.routing_step_id = ph.routing_step_id
+JOIN process AS p
+    ON p.process_id = rs.process_id
+WHERE ps.serial_no = 'BASIC-20260728-001'
+  AND p.process_code = 'PROC-EOL';
+
+
+INSERT INTO eol_test_result (
+    process_history_id,
+    forward_ok,
+    reverse_ok,
+    forward_time_ms,
+    reverse_time_ms,
+    max_current_ma,
+    target_angle_deg,
+    actual_angle_deg,
+    position_error_deg,
+    result,
+    failure_reason
+)
+SELECT
+    ph.process_history_id,
+    1,
+    1,
+    1250,
+    1280,
+    820.5,
+    NULL,
+    NULL,
+    NULL,
+    'PASS',
+    NULL
+FROM process_history AS ph
+JOIN product_serial AS ps
+    ON ps.product_serial_id = ph.product_serial_id
+JOIN routing_step AS rs
+    ON rs.routing_step_id = ph.routing_step_id
+JOIN process AS p
+    ON p.process_id = rs.process_id
+WHERE ps.serial_no = 'BASIC-20260728-001'
+  AND p.process_code = 'PROC-EOL';
+
+
+SELECT
+    etr.eol_test_result_id,
+    ps.serial_no,
+    product.item_code AS product_code,
+    wo.work_order_no,
+    p.process_name,
+    etr.forward_ok,
+    etr.reverse_ok,
+    etr.forward_time_ms,
+    etr.reverse_time_ms,
+    etr.max_current_ma,
+    etr.target_angle_deg,
+    etr.actual_angle_deg,
+    etr.position_error_deg,
+    etr.result,
+    etr.failure_reason,
+    etr.tested_at
+FROM eol_test_result AS etr
+JOIN process_history AS ph
+    ON ph.process_history_id = etr.process_history_id
+JOIN product_serial AS ps
+    ON ps.product_serial_id = ph.product_serial_id
+JOIN work_order AS wo
+    ON wo.work_order_id = ps.work_order_id
+JOIN item AS product
+    ON product.item_id = wo.product_item_id
+JOIN routing_step AS rs
+    ON rs.routing_step_id = ph.routing_step_id
+JOIN process AS p
+    ON p.process_id = rs.process_id
+ORDER BY etr.tested_at DESC;
 
