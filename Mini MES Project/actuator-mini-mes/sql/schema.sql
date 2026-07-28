@@ -80,3 +80,31 @@ CREATE TABLE process_history(process_history_id INTEGER PRIMARY KEY,
                              FOREIGN KEY(routing_step_id) REFERENCES routing_step(routing_step_id),
                              UNIQUE(product_serial_id, routing_step_id));
 
+
+CREATE TABLE material_consumption (consumption_id INTEGER PRIMARY KEY,
+                                   product_serial_id INTEGER NOT NULL,
+                                   material_lot_id INTEGER NOT NULL,
+                                   routing_step_id INTEGER NOT NULL,
+                                   consumed_qty INTEGER NOT NULL CHECK (consumed_qty > 0),
+                                   consumed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                   FOREIGN KEY (product_serial_id) REFERENCES product_serial(product_serial_id),
+                                   FOREIGN KEY (material_lot_id) REFERENCES material_lot(material_lot_id),
+                                   FOREIGN KEY (routing_step_id) REFERENCES routing_step(routing_step_id),
+                                   UNIQUE(product_serial_id, material_lot_id, routing_step_id));
+
+
+CREATE TABLE eol_test_result (eol_test_result_id INTEGER PRIMARY KEY,
+                              process_history_id INTEGER NOT NULL,
+                              forward_ok INTEGER NOT NULL CHECK (forward_ok IN (0, 1)),
+                              reverse_ok INTEGER NOT NULL CHECK (reverse_ok IN (0, 1)),
+                              forward_time_ms INTEGER NOT NULL CHECK (forward_time_ms IN (0, 1)),
+                              reverse_time_ms INTEGER NOT NULL CHECK (reverse_time_ms IN (0, 1)),
+                              max_current_ma REAL NOT NULL CHECK (max_current_ma IN (0, 1)),
+                              target_angle_deg REAL,
+                              actual_angle_deg REAL,
+                              position_error_deg REAL CHECK (position_error_deg IS NULL OR position_error_deg >= 0),
+                              result TEXT NOT NULL CHECK (result IN ('PASS', 'FAIL')),
+                              failure_reason TEXT,
+                              tested_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                              FOREIGN KEY (process_history_id) REFERENCES process_history(process_history_id),
+                              UNIQUE(process_history_id));
