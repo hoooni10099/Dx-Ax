@@ -97,17 +97,17 @@ CREATE TABLE eol_test_result (eol_test_result_id INTEGER PRIMARY KEY,
                               process_history_id INTEGER NOT NULL,
                               forward_ok INTEGER NOT NULL CHECK (forward_ok IN (0, 1)),
                               reverse_ok INTEGER NOT NULL CHECK (reverse_ok IN (0, 1)),
-                              forward_time_ms INTEGER NOT NULL CHECK (forward_time_ms IN (0, 1)),
-                              reverse_time_ms INTEGER NOT NULL CHECK (reverse_time_ms IN (0, 1)),
-                              max_current_ma REAL NOT NULL CHECK (max_current_ma IN (0, 1)),
+                              forward_time_ms INTEGER NOT NULL CHECK (forward_time_ms > 0),
+                              reverse_time_ms INTEGER NOT NULL CHECK (reverse_time_ms > 0),
+                              max_current_ma REAL NOT NULL CHECK (max_current_ma > 0),
                               target_angle_deg REAL,
                               actual_angle_deg REAL,
                               position_error_deg REAL CHECK (position_error_deg IS NULL OR position_error_deg >= 0),
                               result TEXT NOT NULL CHECK (result IN ('PASS', 'FAIL')),
                               failure_reason TEXT,
                               tested_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                              FOREIGN KEY (process_history_id) REFERENCES process_history(process_history_id),
-                              UNIQUE(process_history_id));
+                              FOREIGN KEY (process_history_id) REFERENCES process_history (process_history_id),
+                              UNIQUE (process_history_id));
 
 
 SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name;
