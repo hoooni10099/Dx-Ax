@@ -156,3 +156,5 @@ iba korea
 java는 모듈을 잘 받는게 제일 중요
 maven or 그래들
 pom 파일을 llm에 물어봐서 잘 다운 받기
+
+rust
