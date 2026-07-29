@@ -17,3 +17,28 @@ try:
 
 except ValueError as error:
     print("작업지시 생성 실패:", error)
+
+
+
+
+-------------------------------------------------------
+
+SQL
+
+
+SELECT
+    wo.work_order_id,
+    wo.work_order_no,
+    i.item_code,
+    wo.planned_qty,
+    wo.status AS work_order_status,
+    ps.serial_no,
+    ps.status AS serial_status
+FROM work_order AS wo
+JOIN item AS i
+    ON i.item_id = wo.product_item_id
+LEFT JOIN product_serial AS ps
+    ON ps.work_order_id = wo.work_order_id
+ORDER BY
+    wo.work_order_id,
+    ps.product_serial_id;
