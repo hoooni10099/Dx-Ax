@@ -30,3 +30,19 @@ JOIN product_serial AS ps
     ON ps.work_order_id = wo.work_order_id
 WHERE wo.work_order_id = 2
 ORDER BY ps.product_serial_id;
+
+
+-----------------------------------------------
+
+SELECT
+    wo.work_order_no,
+    wo.status AS work_order_status,
+    wo.started_at AS work_order_started_at,
+    ps.serial_no,
+    ps.status AS serial_status,
+    ps.started_at AS serial_started_at
+FROM work_order AS wo
+JOIN product_serial AS ps
+    ON ps.work_order_id = wo.work_order_id
+WHERE wo.work_order_no = 'WO-20260729-002'
+ORDER BY ps.product_serial_id;
