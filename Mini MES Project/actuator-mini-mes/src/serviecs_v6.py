@@ -299,4 +299,8 @@ def register_process_result(
             ),
         )
 
+        # PASS와 FAIL을 모두 “등록 완료된 공정”으로 판단한다.
+        # 따라서 FAIL을 등록해도 다음 공정으로 넘어갈 수 있다.
+        # 추후 PASS → 다음 공정 진행, FAIL → 다음 공정 진행 차단 또는 재작업 처리
+
         return cursor.lastrowid
