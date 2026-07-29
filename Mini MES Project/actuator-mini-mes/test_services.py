@@ -15,6 +15,7 @@ try:
 except ValueError as error:
     print("조회 실패:", error)
 
+# 신규 생성 테스트를 하고 싶다면 번호만 바꿔서 진행
 try:
     work_order_id = create_work_order_only(
         work_order_no="WO-20260729-001",
