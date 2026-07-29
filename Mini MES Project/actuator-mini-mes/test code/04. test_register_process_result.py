@@ -40,3 +40,24 @@ JOIN process AS p
     ON p.process_id = rs.process_id
 WHERE ps.serial_no = 'WO-20260729-002-S001'
 ORDER BY rs.sequence_no;
+
+
+-------------------------------------------------
+
+SELECT
+    ps.serial_no,
+    rs.sequence_no,
+    p.process_code,
+    p.process_name,
+    ph.result,
+    ph.remark,
+    ph.completed_at
+FROM process_history AS ph
+JOIN product_serial AS ps
+    ON ps.product_serial_id = ph.product_serial_id
+JOIN routing_step AS rs
+    ON rs.routing_step_id = ph.routing_step_id
+JOIN process AS p
+    ON p.process_id = rs.process_id
+WHERE ps.serial_no = 'WO-20260729-002-S001'
+ORDER BY rs.sequence_no;
