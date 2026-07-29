@@ -9,3 +9,22 @@ work_order_id = create_work_order_only(
 )
 
 print("생성된 작업지시 ID:", work_order_id)
+
+
+
+
+-------------------------------------------------------
+SQL
+
+SELECT
+    wo.work_order_id,
+    wo.work_order_no,
+    i.item_code,
+    i.item_name,
+    wo.planned_qty,
+    wo.status,
+    wo.due_date,
+    wo.created_at
+FROM work_order AS wo
+JOIN item AS i
+    ON i.item_id = wo.product_item_id;
