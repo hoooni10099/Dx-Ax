@@ -183,7 +183,7 @@ def create_work_order_with_serials(
         raise ValueError('계획 수량은 1 이상이어야 합니다.')
 
     try:
-        datetime.strptime(due_date, "$Y-%m-%d")
+        datetime.strptime(due_date, "%Y-%m-%d")
     except (TypeError, ValueError) as error:
         raise ValueError(
             '납기일은 YYYY-MM-DD 형식의 올바른 날짜여야 합니다.'
