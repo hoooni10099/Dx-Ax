@@ -1,4 +1,4 @@
-from src.services import register_eol_test_result
+from src.third_material_service import get_material_lot_inventory
 # EOL 결과 판정부터 DB 저장 까지
 
 try:
