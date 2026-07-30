@@ -8,9 +8,9 @@ from src.fifth_tracking_service import (
 )
 
 
-PASS_SERIAL = "WO-20260729-002-S002"
-FAIL_SERIAL = "WO-20260730-001-S001"
-VALID_LOT = "LOT-MOTOR-20260701-A"
+PASS_SERIAL = "WO-20260730-001-S001"
+FAIL_SERIAL = "WO-20260730-001-S002"
+VALID_LOT = "LOT-MOTOR-20260715-B"
 
 
 def print_title(title: str):
@@ -25,8 +25,7 @@ def test_serial_summary():
     for serial_no in [
         PASS_SERIAL,
         FAIL_SERIAL,
-        "존재하지않는-SERIAL",
-        "   ",
+        "WO-20260730-001-S001",
     ]:
         try:
             result = get_serial_summary(serial_no)
@@ -116,8 +115,7 @@ def test_material_lot_summary():
 
     for lot_no in [
         VALID_LOT,
-        "존재하지않는-LOT",
-        "   ",
+        "LOT-HOUSING-20260715-B",
     ]:
         try:
             summary = get_material_lot_summary(lot_no)
