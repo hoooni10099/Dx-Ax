@@ -30,3 +30,31 @@ try:
 
 except ValueError as error:
     print("EOL 검사 판정 실패:", error)
+
+---------------------------------------------------
+SQL
+
+SELECT
+    ps.serial_no,
+    ps.status,
+    ps.completed_at,
+    ph.process_history_id,
+    ph.result AS process_result,
+    etr.eol_test_result_id,
+    etr.forward_ok,
+    etr.reverse_ok,
+    etr.forward_time_ms,
+    etr.reverse_time_ms,
+    etr.max_current_ma,
+    etr.target_angle_deg,
+    etr.actual_angle_deg,
+    ROUND(etr.position_error_deg, 2) AS position_error_deg,
+    etr.result AS eol_result,
+    etr.failure_reason,
+    etr.tested_at
+FROM product_serial AS ps
+JOIN process_history AS ph
+    ON ph.product_serial_id = ps.product_serial_id
+JOIN eol_test_result AS etr
+    ON etr.process_history_id = ph.process_history_id
+WHERE ps.serial_no = 'WO-20260729-002-S002';
