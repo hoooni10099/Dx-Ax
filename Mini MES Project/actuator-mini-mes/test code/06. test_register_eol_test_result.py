@@ -1,5 +1,5 @@
 from src.services import register_eol_test_result
-
+# EOL 입력값 검증과 자동 판정 로직
 
 try:
     eol_result = register_eol_test_result(
