@@ -360,3 +360,219 @@ def register_eol_test_result(
                 ml.lot_no
             """
         ).fetchall()
+
+
+def complete_production(serial_no: str) -> dict:
+    """
+    모든 선행 필수 공정이 PASS인지 확인한 뒤,
+    생산 완료 공정(PROC-COMPLETE)을 등록하고
+    Serial을 최종 PASS 상태로 변경한다.
+    """
+
+    # -------------------------
+    # 1. 입력값 검증
+    # -------------------------
+    if not isinstance(serial_no, str):
+        raise ValueError("Serial 번호는 문자열이어야 합니다.")
+
+    serial_no = serial_no.strip()
+
+    if not serial_no:
+        raise ValueError("Serial 번호를 입력하세요.")
+
+    with get_connection() as connection:
+        # -------------------------
+        # 2. Serial 및 제품 정보 조회
+        # -------------------------
+        product_serial = connection.execute(
+            """
+            SELECT
+                ps.product_serial_id,
+                ps.serial_no,
+                ps.status AS serial_status,
+                ps.work_order_id,
+                wo.product_item_id,
+                i.item_code AS product_code,
+                i.item_name AS product_name
+            FROM product_serial AS ps
+            JOIN work_order AS wo
+                ON wo.work_order_id = ps.work_order_id
+            JOIN item AS i
+                ON i.item_id = wo.product_item_id
+            WHERE ps.serial_no = ?
+            """,
+            (serial_no,),
+        ).fetchone()
+
+        if product_serial is None:
+            raise ValueError(
+                f"Serial 번호를 찾을 수 없습니다: {serial_no}"
+            )
+
+        if product_serial["serial_status"] != "IN_PROGRESS":
+            raise ValueError(
+                "생산 완료 처리할 수 없는 Serial 상태입니다: "
+                f"{product_serial['serial_status']}"
+            )
+
+        # -------------------------
+        # 3. 생산 완료 공정 조회
+        # -------------------------
+        completion_step = connection.execute(
+            """
+            SELECT
+                rs.routing_step_id,
+                rs.sequence_no,
+                p.process_code,
+                p.process_name
+            FROM routing_step AS rs
+            JOIN process AS p
+                ON p.process_id = rs.process_id
+            WHERE rs.product_item_id = ?
+              AND rs.is_active = 1
+              AND rs.is_required = 1
+              AND p.process_code = 'PROC-COMPLETE'
+            """,
+            (product_serial["product_item_id"],),
+        ).fetchone()
+
+        if completion_step is None:
+            raise ValueError(
+                "제품 라우팅에서 생산 완료 공정을 "
+                "찾을 수 없습니다."
+            )
+
+        # -------------------------
+        # 4. 생산 완료 이력 중복 확인
+        # -------------------------
+        existing_completion = connection.execute(
+            """
+            SELECT
+                process_history_id,
+                result
+            FROM process_history
+            WHERE product_serial_id = ?
+              AND routing_step_id = ?
+            """,
+            (
+                product_serial["product_serial_id"],
+                completion_step["routing_step_id"],
+            ),
+        ).fetchone()
+
+        if existing_completion is not None:
+            raise ValueError(
+                "생산 완료 공정이 이미 등록되어 있습니다."
+            )
+
+        # -------------------------
+        # 5. 선행 필수 공정 검증
+        # -------------------------
+        incomplete_step = connection.execute(
+            """
+            SELECT
+                rs.sequence_no,
+                p.process_code,
+                p.process_name,
+                ph.result
+            FROM routing_step AS rs
+            JOIN process AS p
+                ON p.process_id = rs.process_id
+            LEFT JOIN process_history AS ph
+                ON ph.product_serial_id = ?
+               AND ph.routing_step_id = rs.routing_step_id
+            WHERE rs.product_item_id = ?
+              AND rs.is_active = 1
+              AND rs.is_required = 1
+              AND rs.sequence_no < ?
+              AND (
+                    ph.process_history_id IS NULL
+                    OR ph.result != 'PASS'
+              )
+            ORDER BY rs.sequence_no
+            LIMIT 1
+            """,
+            (
+                product_serial["product_serial_id"],
+                product_serial["product_item_id"],
+                completion_step["sequence_no"],
+            ),
+        ).fetchone()
+
+        if incomplete_step is not None:
+            step_status = (
+                incomplete_step["result"]
+                if incomplete_step["result"] is not None
+                else "미등록"
+            )
+
+            raise ValueError(
+                "생산 완료 전 선행 공정을 확인하세요: "
+                f"{incomplete_step['process_code']} "
+                f"({incomplete_step['process_name']}, "
+                f"{step_status})"
+            )
+
+        # -------------------------
+        # 6. 생산 완료 공정 이력 저장
+        # -------------------------
+        process_cursor = connection.execute(
+            """
+            INSERT INTO process_history(
+                product_serial_id,
+                routing_step_id,
+                result,
+                started_at,
+                completed_at,
+                remark
+            )
+            VALUES (
+                ?,
+                ?,
+                'PASS',
+                CURRENT_TIMESTAMP,
+                CURRENT_TIMESTAMP,
+                ?
+            )
+            """,
+            (
+                product_serial["product_serial_id"],
+                completion_step["routing_step_id"],
+                "모든 필수 공정 완료",
+            ),
+        )
+
+        process_history_id = process_cursor.lastrowid
+
+        # -------------------------
+        # 7. Serial 최종 PASS 처리
+        # -------------------------
+        serial_cursor = connection.execute(
+            """
+            UPDATE product_serial
+            SET
+                status = 'PASS',
+                completed_at = CURRENT_TIMESTAMP
+            WHERE product_serial_id = ?
+              AND status = 'IN_PROGRESS'
+            """,
+            (product_serial["product_serial_id"],),
+        )
+
+        if serial_cursor.rowcount != 1:
+            raise ValueError(
+                "Serial 상태가 변경되어 생산 완료 처리에 실패했습니다."
+            )
+
+        return {
+            "product_serial_id": (
+                product_serial["product_serial_id"]
+            ),
+            "serial_no": product_serial["serial_no"],
+            "work_order_id": product_serial["work_order_id"],
+            "process_history_id": process_history_id,
+            "process_code": completion_step["process_code"],
+            "process_name": completion_step["process_name"],
+            "result": "PASS",
+            "serial_status": "PASS",
+        }
