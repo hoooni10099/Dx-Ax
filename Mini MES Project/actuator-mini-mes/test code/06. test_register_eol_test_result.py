@@ -1,5 +1,5 @@
 from src.services import register_eol_test_result
-# EOL 입력값 검증과 자동 판정 로직
+# EOL 결과 판정부터 DB 저장 까지
 
 try:
     eol_result = register_eol_test_result(
@@ -14,6 +14,8 @@ try:
     )
 
     print("EOL 검사 판정을 완료했습니다.")
+    print("공정 이력 ID:", eol_result["process_history_id"])
+    print("EOL 검사 결과 ID:", eol_result["eol_test_result_id"])
     print("판정:", eol_result["result"])
 
     position_error = eol_result["position_error_deg"]
