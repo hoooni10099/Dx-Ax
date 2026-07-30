@@ -1,4 +1,4 @@
-from src.services import start_product_serial
+from src.second_production_service import start_product_serial
 
 
 try:
