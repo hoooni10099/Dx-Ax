@@ -16,19 +16,29 @@ ORDER BY ml.material_lot_id;
 # 아래 테스트 코드의 LOT 번호는 실제 DB에 저장된 번호에 맞게 바꿔야 함.
 
 from src.services import register_material_consumption
+# 선 자재투입 후 공정 실적 등록
 
-
-serial_no = "WO-20260729-002-S001"
+serial_no = "WO-20260729-002-S002"
 
 materials = [
+    # {
+    #     "process_code": "PROC-MOTOR",
+    #     "lot_no": "LOT-MOTOR-20260701-A",
+    #     "consumed_qty": 1,
+    # },
+    # {
+    #     "process_code": "PROC-MOTOR",
+    #     "lot_no": "LOT-HOUSING-20260701-A",
+    #     "consumed_qty": 1,
+    # },
+    # {
+    #     "process_code": "PROC-GEAR",
+    #     "lot_no": "LOT-GEAR-20260701-A",
+    #     "consumed_qty": 1,
+    # },
     {
-        "process_code": "PROC-MOTOR",
-        "lot_no": "LOT-MOTOR-001",
-        "consumed_qty": 1,
-    },
-    {
-        "process_code": "PROC-MOTOR",
-        "lot_no": "LOT-HOUSING-001",
+        "process_code": "PROC-PCB",
+        "lot_no": "LOT-PCB-20260701-A",
         "consumed_qty": 1,
     },
 ]
