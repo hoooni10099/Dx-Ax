@@ -1,4 +1,4 @@
-from src.services import register_process_result
+from src.third_material_service import register_process_result
 # 모터, 하우징 제외
 # 기어, 센서, PCB VISUAL ONLY PASS 등록
 
