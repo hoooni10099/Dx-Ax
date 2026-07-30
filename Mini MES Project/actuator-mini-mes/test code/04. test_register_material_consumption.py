@@ -17,6 +17,7 @@ ORDER BY ml.material_lot_id;
 
 from src.services import register_material_consumption
 # 선 자재투입 후 공정 실적 등록
+# 모터, 하우징 동시 진행(하우징 별도 공정 없음)
 
 serial_no = "WO-20260729-002-S002"
 
