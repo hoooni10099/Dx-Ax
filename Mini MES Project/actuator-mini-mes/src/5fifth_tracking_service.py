@@ -250,3 +250,67 @@ def get_serial_material_trace(serial_no: str) -> list[dict]:
         ).fetchall()
 
         return [dict(row) for row in material_rows]
+
+def get_serial_eol_result(serial_no: str) -> dict | None:
+    """Serial의 EOL 성능 검사 상세 결과를 조회한다."""
+
+    serial_no = serial_no.strip()
+
+    if not serial_no:
+        raise ValueError("Serial 번호를 입력해야 합니다.")
+
+    with get_connection() as connection:
+        serial = connection.execute(
+            """
+            SELECT
+                product_serial_id
+            FROM product_serial
+            WHERE serial_no = ?
+            """,
+            (serial_no,),
+        ).fetchone()
+
+        if serial is None:
+            raise ValueError(
+                f"Serial 번호를 찾을 수 없습니다 : {serial_no}"
+            )
+
+        eol_result = connection.execute(
+            """
+            SELECT
+                ph.process_history_id,
+                p.process_code,
+                p.process_name,
+                ph.result AS process_result,
+                ph.started_at,
+                ph.completed_at,
+                ph.remark,
+                etr.eol_test_result_id,
+                etr.forward_ok,
+                etr.reverse_ok,
+                etr.forward_time_ms,
+                etr.reverse_time_ms,
+                etr.max_current_ma,
+                etr.target_angle_deg,
+                etr.actual_angle_deg,
+                etr.position_error_deg,
+                etr.result AS eol_result,
+                etr.failure_reason,
+                etr.tested_at
+            FROM process_history AS ph
+            JOIN routing_step AS rs
+                ON rs.routing_step_id = ph.routing_step_id
+            JOIN process AS p
+                ON p.process_id = rs.process_id
+            LEFT JOIN eol_test_result AS etr
+                ON etr.process_history_id = ph.process_history_id
+            WHERE ph.product_serial_id = ?
+              AND p.process_code = 'PROC-EOL'
+            """,
+            (serial["product_serial_id"],),
+        ).fetchone()
+
+        if eol_result is None:
+            return None
+
+        return dict(eol_result)
