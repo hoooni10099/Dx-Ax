@@ -119,3 +119,54 @@ def create_work_order_with_serials(
 
     # 작업 지시와 Serial 번호가 발급만 된거지, 공정이 시작된 것은 아님.
     return work_order_id, created_serial_numbers
+
+def update_work_order_status(
+    connection,
+    work_order_id: int,
+) -> None:
+    """
+    계획수량만큼 Serial의 PASS/FAIL 결과가 확정되면
+    작업지시를 COMPLETED로 변경한다.
+    """
+
+    work_order = connection.execute(
+        """
+        SELECT
+            planned_qty,
+            status
+        FROM work_order
+        WHERE work_order_id = ?
+        """,
+        (work_order_id,),
+    ).fetchone()
+
+    if work_order is None:
+        raise ValueError(
+            f"작업지시를 찾을 수 없습니다: {work_order_id}"
+        )
+
+    if work_order["status"] == "CANCELLED":
+        return
+
+    result_count = connection.execute(
+        """
+        SELECT COUNT(*) AS result_count
+        FROM product_serial
+        WHERE work_order_id = ?
+          AND status IN ('PASS', 'FAIL')
+        """,
+        (work_order_id,),
+    ).fetchone()["result_count"]
+
+    if result_count >= work_order["planned_qty"]:
+        connection.execute(
+            """
+            UPDATE work_order
+            SET
+                status = 'COMPLETED',
+                completed_at = CURRENT_TIMESTAMP
+            WHERE work_order_id = ?
+              AND status = 'IN_PROGRESS'
+            """,
+            (work_order_id,),
+        )
