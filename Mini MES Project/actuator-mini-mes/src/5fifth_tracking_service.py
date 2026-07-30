@@ -384,3 +384,60 @@ def get_material_lot_usage(lot_no: str) -> list[dict]:
         ).fetchall()
 
         return [dict(row) for row in usage_rows]
+
+def get_material_lot_summary(lot_no: str) -> dict:
+    """자재 LOT의 기본정보와 입고·사용·잔여 수량을 조회한다."""
+
+    lot_no = lot_no.strip()
+
+    if not lot_no:
+        raise ValueError("자재 LOT 번호를 입력해야 합니다.")
+
+    with get_connection() as connection:
+        summary = connection.execute(
+            """
+            SELECT
+                ml.material_lot_id,
+                ml.lot_no,
+                ml.material_item_id,
+                i.item_code AS material_code,
+                i.item_name AS material_name,
+                ml.received_qty,
+                ml.received_date,
+                ml.status,
+                ml.created_at,
+                COALESCE(SUM(mc.consumed_qty), 0) AS consumed_qty,
+                COUNT(DISTINCT mc.product_serial_id) AS used_serial_count
+            FROM material_lot AS ml
+            JOIN item AS i
+                ON i.item_id = ml.material_item_id
+            LEFT JOIN material_consumption AS mc
+                ON mc.material_lot_id = ml.material_lot_id
+            WHERE ml.lot_no = ?
+            GROUP BY
+                ml.material_lot_id,
+                ml.lot_no,
+                ml.material_item_id,
+                i.item_code,
+                i.item_name,
+                ml.received_qty,
+                ml.received_date,
+                ml.status,
+                ml.created_at
+            """,
+            (lot_no,),
+        ).fetchone()
+
+        if summary is None:
+            raise ValueError(
+                f"자재 LOT 번호를 찾을 수 없습니다 : {lot_no}"
+            )
+
+        result = dict(summary)
+
+        result["remaining_qty"] = (
+            result["received_qty"] - result["consumed_qty"]
+        )
+
+        return result
+
