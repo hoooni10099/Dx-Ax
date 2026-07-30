@@ -37,6 +37,11 @@ materials = [
     #     "lot_no": "LOT-GEAR-20260701-A",
     #     "consumed_qty": 1,
     # },
+    # {
+    #     "process_code": "PROC-SENSOR",
+    #     "lot_no": "LOT-SENSOR-20260701-A",
+    #     "consumed_qty": 1,
+    # },
     {
         "process_code": "PROC-PCB",
         "lot_no": "LOT-PCB-20260701-A",
