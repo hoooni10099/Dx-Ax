@@ -1,4 +1,4 @@
-from src.services import find_active_product
+from src.first_work_order_service import find_active_product
 
 
 product = find_active_product("ACT-BASIC")
