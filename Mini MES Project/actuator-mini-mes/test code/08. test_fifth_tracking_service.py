@@ -2,7 +2,8 @@ from src.fifth_tracking_service import (
     get_serial_summary,
     get_serial_process_status,
     get_serial_material_trace,
-    get_serial_eol_result,)
+    get_serial_eol_result,
+    get_material_lot_usage,)
 
 serial_numbers = [
     "WO-20260730-001-S001",
@@ -66,3 +67,19 @@ try:
 
 except ValueError as error:
     print("EOL 검사 결과 조회 실패:", error)
+
+try:
+    usages = get_material_lot_usage(
+        "LOT-MOTOR-20260701-A"
+    )
+
+    print("\n자재 LOT 사용처 역추적 결과")
+
+    if not usages:
+        print("아직 이 LOT를 사용한 생산 이력이 없습니다.")
+    else:
+        for usage in usages:
+            print(usage)
+
+except ValueError as error:
+    print("자재 LOT 역추적 실패:", error)
