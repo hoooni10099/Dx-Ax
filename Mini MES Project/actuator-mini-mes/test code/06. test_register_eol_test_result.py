@@ -1,60 +1,57 @@
-from src.third_material_service import get_material_lot_inventory
-# EOL 결과 판정부터 DB 저장 까지
+from src.fourth_eol_service import (
+    register_eol_test_result,
+    complete_production,
+)
+SERIAL_NO = "WO-20260730-001-S002"
+
 
 try:
+    # 1. EOL 검사 등록
     eol_result = register_eol_test_result(
-        serial_no="WO-20260729-002-S002",
+        serial_no=SERIAL_NO,
         forward_ok=True,
         reverse_ok=True,
         forward_time_ms=850,
         reverse_time_ms=900,
-        max_current_ma=1200.0,
-        target_angle_deg=90.0,
-        actual_angle_deg=89.2,
+        max_current_ma=1198.0,
+        target_angle_deg=91.3,
+        actual_angle_deg=88.0,
     )
 
-    print("EOL 검사 판정을 완료했습니다.")
+    print("\n[EOL 검사 결과]")
     print("공정 이력 ID:", eol_result["process_history_id"])
     print("EOL 검사 결과 ID:", eol_result["eol_test_result_id"])
     print("판정:", eol_result["result"])
 
     position_error = eol_result["position_error_deg"]
+
     if position_error is None:
         print("위치 오차: 측정 안 함")
     else:
         print(f"위치 오차: {position_error:.2f}도")
+
     print(
         "실패 사유:",
         eol_result["failure_reason"] or "없음",
     )
 
+    # 2. EOL 합격 시에만 생산 완료
+    if eol_result["result"] == "PASS":
+        completion_result = complete_production(SERIAL_NO)
+
+        print("\n[생산 완료 결과]")
+        print(
+            "공정 이력 ID:",
+            completion_result["process_history_id"],
+        )
+        print("공정 코드:", completion_result["process_code"])
+        print("공정 결과:", completion_result["result"])
+        print("Serial 상태:", completion_result["serial_status"])
+    else:
+        print(
+            "\nEOL 검사에 실패하여 "
+            "생산 완료 처리를 진행하지 않습니다."
+        )
+
 except ValueError as error:
-    print("EOL 검사 판정 실패:", error)
-
----------------------------------------------------
-SQL
-
-SELECT
-    ps.serial_no,
-    ps.status,
-    ps.completed_at,
-    ph.process_history_id,
-    ph.result AS process_result,
-    etr.eol_test_result_id,
-    etr.forward_ok,
-    etr.reverse_ok,
-    etr.forward_time_ms,
-    etr.reverse_time_ms,
-    etr.max_current_ma,
-    etr.target_angle_deg,
-    etr.actual_angle_deg,
-    ROUND(etr.position_error_deg, 2) AS position_error_deg,
-    etr.result AS eol_result,
-    etr.failure_reason,
-    etr.tested_at
-FROM product_serial AS ps
-JOIN process_history AS ph
-    ON ph.product_serial_id = ps.product_serial_id
-JOIN eol_test_result AS etr
-    ON etr.process_history_id = ph.process_history_id
-WHERE ps.serial_no = 'WO-20260729-002-S002';
+    print("\n처리 실패:", error)
