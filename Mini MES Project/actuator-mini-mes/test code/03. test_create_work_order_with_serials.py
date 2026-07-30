@@ -1,4 +1,4 @@
-from src.services import create_work_order_with_serials
+from src.first_work_order_service import create_work_order_with_serials
 # 함수 2개 합친 코드
 
 try:
