@@ -110,7 +110,6 @@ def get_serial_summary(serial_no: str) -> dict:
 
         return result
 
-
 def get_serial_process_status(serial_no: str) -> list[dict]:
     """Serial에 적용되는 전체 공정과 공정별 진행 상태를 조회한다."""
 
@@ -196,3 +195,58 @@ def get_serial_process_status(serial_no: str) -> list[dict]:
             results.append(process)
 
         return results
+
+def get_serial_material_trace(serial_no: str) -> list[dict]:
+    """Serial 생산에 투입된 자재 LOT 이력을 조회한다."""
+
+    serial_no = serial_no.strip()
+
+    if not serial_no:
+        raise ValueError("Serial 번호를 입력해야 합니다.")
+
+    with get_connection() as connection:
+        serial = connection.execute(
+            """
+            SELECT
+                product_serial_id
+            FROM product_serial
+            WHERE serial_no = ?
+            """,
+            (serial_no,),
+        ).fetchone()
+
+        if serial is None:
+            raise ValueError(
+                f"Serial 번호를 찾을 수 없습니다 : {serial_no}"
+            )
+
+        material_rows = connection.execute(
+            """
+            SELECT
+                mc.consumption_id,
+                i.item_code AS material_code,
+                i.item_name AS material_name,
+                ml.lot_no,
+                mc.consumed_qty,
+                mc.consumed_at,
+                rs.sequence_no,
+                p.process_code,
+                p.process_name
+            FROM material_consumption AS mc
+            JOIN material_lot AS ml
+                ON ml.material_lot_id = mc.material_lot_id
+            JOIN item AS i
+                ON i.item_id = ml.material_item_id
+            JOIN routing_step AS rs
+                ON rs.routing_step_id = mc.routing_step_id
+            JOIN process AS p
+                ON p.process_id = rs.process_id
+            WHERE mc.product_serial_id = ?
+            ORDER BY
+                rs.sequence_no,
+                mc.consumption_id
+            """,
+            (serial["product_serial_id"],),
+        ).fetchall()
+
+        return [dict(row) for row in material_rows]
