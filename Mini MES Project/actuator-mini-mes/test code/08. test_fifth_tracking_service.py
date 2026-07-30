@@ -1,7 +1,8 @@
 from src.fifth_tracking_service import (
     get_serial_summary,
     get_serial_process_status,
-    get_serial_material_trace,)
+    get_serial_material_trace,
+    get_serial_eol_result,)
 
 serial_numbers = [
     "WO-20260730-001-S001",
@@ -49,3 +50,19 @@ try:
 
 except ValueError as error:
     print("자재 LOT 추적 실패:", error)
+
+try:
+    eol_result = get_serial_eol_result(
+        "WO-20260730-001-S001"
+    )
+
+    print("\nEOL 성능 검사 상세 결과")
+
+    if eol_result is None:
+        print("등록된 EOL 검사 실적이 없습니다.")
+    else:
+        for key, value in eol_result.items():
+            print(f"{key}: {value}")
+
+except ValueError as error:
+    print("EOL 검사 결과 조회 실패:", error)
