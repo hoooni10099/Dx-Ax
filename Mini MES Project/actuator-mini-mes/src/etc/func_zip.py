@@ -3,6 +3,7 @@
 
 현재 실제 기능에서는 사용하지 않으며,
 src.services.create_work_order_with_serials()로 통합되었다.
+create_work_order_only + create_product_serials
 """
 
 # # 작업지시 1건만 저장하는 함수, Serial은 x
