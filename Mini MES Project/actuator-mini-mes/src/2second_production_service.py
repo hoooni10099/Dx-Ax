@@ -36,7 +36,7 @@ def start_product_serial(serial_no: str) -> None:
         if product_serial["serial_status"] != "CREATED":
             raise ValueError(
                 '생산을 시작할 수 없는 Serial 상태입니다: '
-                f'{product_serial['serial_status']}'
+                f"{product_serial['serial_status']}"
             )
 
         if product_serial["work_order_status"] == "CANCELLED":
