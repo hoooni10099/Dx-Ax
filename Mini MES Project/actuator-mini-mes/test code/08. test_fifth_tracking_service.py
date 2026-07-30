@@ -1,6 +1,7 @@
 from src.fifth_tracking_service import (
     get_serial_summary,
-    get_serial_process_status,)
+    get_serial_process_status,
+    get_serial_material_trace,)
 
 serial_numbers = [
     "WO-20260730-001-S001",
@@ -32,3 +33,19 @@ try:
 
 except ValueError as error:
     print("공정 현황 조회 실패:", error)
+
+try:
+    materials = get_serial_material_trace(
+        "WO-20260730-001-S001"
+    )
+
+    print("\nSerial별 자재 LOT 투입 이력")
+
+    if not materials:
+        print("등록된 자재 투입 이력이 없습니다.")
+    else:
+        for material in materials:
+            print(material)
+
+except ValueError as error:
+    print("자재 LOT 추적 실패:", error)
