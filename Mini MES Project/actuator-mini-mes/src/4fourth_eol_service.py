@@ -1,5 +1,5 @@
 from src.db import get_connection
-from datetime import datetime
+from src.first_work_order_service import update_work_order_status
 
 # Mini MES 학습용 EOL 합격 기준
 MAX_OPERATION_TIME_MS = 1000
@@ -152,6 +152,7 @@ def register_eol_test_result(
             """
             SELECT
                 ps.product_serial_id,
+                ps.work_order_id,
                 ps.status AS serial_status,
                 wo.product_item_id,
                 i.item_code AS product_code,
@@ -300,21 +301,25 @@ def register_eol_test_result(
         eol_test_result_id = eol_cursor.lastrowid
 
         # -------------------------
-        # 7. 완제품 Serial 완료 처리
+        # 7. EOL FAIL인 경우 Serial 종료
         # -------------------------
-        connection.execute(
-            """
-            UPDATE product_serial
-            SET
-                status = ?,
-                completed_at = CURRENT_TIMESTAMP
-            WHERE product_serial_id = ?
-            """,
-            (
-                result,
-                product_serial["product_serial_id"],
-            ),
-        )
+        if result == "FAIL":
+            connection.execute(
+                """
+                UPDATE product_serial
+                SET
+                    status = 'FAIL',
+                    completed_at = CURRENT_TIMESTAMP
+                WHERE product_serial_id = ?
+                AND status = 'IN_PROGRESS'
+                """,
+                (product_serial["product_serial_id"],),
+            )
+
+            update_work_order_status(
+                connection,
+                product_serial["work_order_id"],
+            )
 
         return {
             "process_history_id": process_history_id,
@@ -323,43 +328,6 @@ def register_eol_test_result(
             "position_error_deg": position_error_deg,
             "failure_reason": failure_reason,
         }
-
-
-    """자재 LOT별 입고량, 누적 투입량, 잔여 수량을 조회한다."""
-
-    with get_connection() as connection:
-        return connection.execute(
-            """
-            SELECT
-                ml.material_lot_id,
-                ml.lot_no,
-                i.item_code,
-                i.item_name,
-                ml.received_qty,
-                COALESCE(SUM(mc.consumed_qty), 0) AS consumed_qty,
-                ml.received_qty
-                    - COALESCE(SUM(mc.consumed_qty), 0) AS remaining_qty,
-                ml.status,
-                ml.received_date
-            FROM material_lot AS ml
-            JOIN item AS i
-                ON i.item_id = ml.material_item_id
-            LEFT JOIN material_consumption AS mc
-                ON mc.material_lot_id = ml.material_lot_id
-            GROUP BY
-                ml.material_lot_id,
-                ml.lot_no,
-                i.item_code,
-                i.item_name,
-                ml.received_qty,
-                ml.status,
-                ml.received_date
-            ORDER BY
-                i.item_code,
-                ml.received_date,
-                ml.lot_no
-            """
-        ).fetchall()
 
 
 def complete_production(serial_no: str) -> dict:
@@ -563,6 +531,11 @@ def complete_production(serial_no: str) -> dict:
             raise ValueError(
                 "Serial 상태가 변경되어 생산 완료 처리에 실패했습니다."
             )
+
+        update_work_order_status(
+            connection,
+            product_serial["work_order_id"],
+        )
 
         return {
             "product_serial_id": (
