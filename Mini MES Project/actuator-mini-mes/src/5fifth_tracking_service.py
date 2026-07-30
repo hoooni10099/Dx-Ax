@@ -251,6 +251,7 @@ def get_serial_material_trace(serial_no: str) -> list[dict]:
 
         return [dict(row) for row in material_rows]
 
+# 정방향 추적
 def get_serial_eol_result(serial_no: str) -> dict | None:
     """Serial의 EOL 성능 검사 상세 결과를 조회한다."""
 
@@ -314,3 +315,72 @@ def get_serial_eol_result(serial_no: str) -> dict | None:
             return None
 
         return dict(eol_result)
+# 역방향 추적
+def get_material_lot_usage(lot_no: str) -> list[dict]:
+    """자재 LOT가 사용된 완제품 Serial 목록을 조회한다."""
+
+    lot_no = lot_no.strip()
+
+    if not lot_no:
+        raise ValueError("자재 LOT 번호를 입력해야 합니다.")
+
+    with get_connection() as connection:
+        material_lot = connection.execute(
+            """
+            SELECT
+                ml.material_lot_id,
+                ml.lot_no,
+                ml.material_item_id,
+                ml.received_qty,
+                ml.received_date,
+                ml.status,
+                i.item_code AS material_code,
+                i.item_name AS material_name
+            FROM material_lot AS ml
+            JOIN item AS i
+                ON i.item_id = ml.material_item_id
+            WHERE ml.lot_no = ?
+            """,
+            (lot_no,),
+        ).fetchone()
+
+        if material_lot is None:
+            raise ValueError(
+                f"자재 LOT 번호를 찾을 수 없습니다 : {lot_no}"
+            )
+
+        usage_rows = connection.execute(
+            """
+            SELECT
+                mc.consumption_id,
+                mc.consumed_qty,
+                mc.consumed_at,
+                ps.product_serial_id,
+                ps.serial_no,
+                ps.status AS serial_status,
+                wo.work_order_no,
+                product.item_code AS product_code,
+                product.item_name AS product_name,
+                rs.sequence_no,
+                p.process_code,
+                p.process_name
+            FROM material_consumption AS mc
+            JOIN product_serial AS ps
+                ON ps.product_serial_id = mc.product_serial_id
+            JOIN work_order AS wo
+                ON wo.work_order_id = ps.work_order_id
+            JOIN item AS product
+                ON product.item_id = wo.product_item_id
+            JOIN routing_step AS rs
+                ON rs.routing_step_id = mc.routing_step_id
+            JOIN process AS p
+                ON p.process_id = rs.process_id
+            WHERE mc.material_lot_id = ?
+            ORDER BY
+                mc.consumed_at,
+                ps.serial_no
+            """,
+            (material_lot["material_lot_id"],),
+        ).fetchall()
+
+        return [dict(row) for row in usage_rows]
