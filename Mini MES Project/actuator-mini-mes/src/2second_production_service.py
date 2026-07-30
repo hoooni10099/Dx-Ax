@@ -1,7 +1,4 @@
 from src.db import get_connection
-from datetime import datetime
-
-
 
 # 공정 시작, Serial 한 개 생산
 # 작업지시: PLANNED → IN_PROGRESS
