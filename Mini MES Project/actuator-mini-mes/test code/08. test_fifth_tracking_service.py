@@ -3,7 +3,8 @@ from src.fifth_tracking_service import (
     get_serial_process_status,
     get_serial_material_trace,
     get_serial_eol_result,
-    get_material_lot_usage,)
+    get_material_lot_usage,
+    get_material_lot_summary,)
 
 serial_numbers = [
     "WO-20260730-001-S001",
@@ -83,3 +84,21 @@ try:
 
 except ValueError as error:
     print("자재 LOT 역추적 실패:", error)
+
+lot_numbers = [
+    "LOT-MOTOR-20260701-A",
+    "존재하지않는-LOT",
+    "   ",
+]
+
+for lot_no in lot_numbers:
+    try:
+        summary = get_material_lot_summary(lot_no)
+
+        print(f"\n자재 LOT 요약: {lot_no}")
+
+        for key, value in summary.items():
+            print(f"{key}: {value}")
+
+    except ValueError as error:
+        print(f"\nLOT 조회 실패 ({lot_no!r}): {error}")
