@@ -1,5 +1,5 @@
 from src.services import create_work_order_with_serials
-
+# 함수 2개 합친 코드
 
 try:
     work_order_id, serial_numbers = create_work_order_with_serials(
