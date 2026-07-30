@@ -1,4 +1,4 @@
-from src.services import get_material_lot_inventory
+from src.third_material_service import get_material_lot_inventory
 
 inventory = get_material_lot_inventory()
 
