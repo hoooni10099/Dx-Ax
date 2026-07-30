@@ -15,7 +15,7 @@ ORDER BY ml.material_lot_id;
 --------------------------------------------------------
 # 아래 테스트 코드의 LOT 번호는 실제 DB에 저장된 번호에 맞게 바꿔야 함.
 
-from src.services import register_material_consumption
+from src.third_material_service import register_material_consumption
 # 선 자재투입 후 공정 실적 등록
 # 모터, 하우징 동시 진행(하우징 별도 공정 없음)
 
