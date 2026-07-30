@@ -607,6 +607,7 @@ def register_material_consumption(
 
 
 # EOL 입력값 검증
+# EOL 입력값 검증과 자동 판정 로직
 def register_eol_test_result(
         serial_no: str,
         forward_ok: bool,
