@@ -37,7 +37,6 @@ def find_active_product(product_item_code: str):
 
     return product
 
-
 # create_work_order_only() + create_product_serials()
 # 작업 지시 생성과 Serial 생성을 하나의 트랜잭션으로 묶는 함수
 def create_work_order_with_serials(
@@ -190,7 +189,6 @@ def start_product_serial(serial_no: str) -> None:
                 """,
                 (product_serial["work_order_id"],),
             )
-
 
 # 생산을 시작한 Serial에 첫 번째 공정인 모터 조립 실적 등록
 def register_process_result(
@@ -362,7 +360,6 @@ def register_process_result(
         # 추후 PASS → 다음 공정 진행, FAIL → 다음 공정 진행 차단 또는 재작업 처리
 
         return cursor.lastrowid
-
 
 # PROC-MOTOR 공정에서 실제로 사용한 자재 LOT 기록(DC 모처, 하우징)
 def register_material_consumption(
@@ -608,8 +605,6 @@ def register_material_consumption(
 
         return cursor.lastrowid
 
-
-# EOL 입력값 검증
 # EOL 입력값 검증과 자동 판정 로직
 def register_eol_test_result(
         serial_no: str,
@@ -927,6 +922,7 @@ def register_eol_test_result(
             "failure_reason": failure_reason,
         }
 
+#잔여 자재 수량 계산
 def get_material_lot_inventory():
     """자재 LOT별 입고량, 누적 투입량, 잔여 수량을 조회한다."""
 
