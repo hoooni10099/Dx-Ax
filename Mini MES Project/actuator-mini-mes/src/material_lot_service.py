@@ -208,3 +208,18 @@ def create_material_lot(
             f"LOT {lot_no}가 등록되었습니다."
         ),
     )
+
+def get_active_materials() -> pd.DataFrame:
+    sql = """
+        SELECT
+            item_id,
+            item_code,
+            item_name
+        FROM item
+        WHERE item_type = 'MATERIAL'
+          AND is_active = 1
+        ORDER BY item_code
+    """
+
+    with get_connection() as connection:
+        return pd.read_sql_query(sql, connection)
