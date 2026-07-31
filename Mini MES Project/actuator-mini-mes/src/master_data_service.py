@@ -5,7 +5,11 @@ import pandas as pd
 from src.db import get_connection
 
 
-def get_items() -> pd.DataFrame:
+def get_items(
+    item_type: str | None = None,
+    is_active: int | None = None,
+    keyword: str | None = None,
+) -> pd.DataFrame:
     sql = """
         SELECT
             item_code AS "품목코드",
@@ -16,6 +20,35 @@ def get_items() -> pd.DataFrame:
                 ELSE '미사용'
             END AS "사용여부"
         FROM item
+        WHERE 1 = 1
+    """
+
+    params = []
+
+    if item_type is not None:
+        sql += """
+            AND item_type = ?
+        """
+        params.append(item_type)
+
+    if is_active is not None:
+        sql += """
+            AND is_active = ?
+        """
+        params.append(is_active)
+
+    if keyword is not None and keyword.strip():
+        sql += """
+            AND (
+                item_code LIKE ?
+                OR item_name LIKE ?
+            )
+        """
+
+        search_keyword = f"%{keyword.strip()}%"
+        params.extend([search_keyword, search_keyword])
+
+    sql += """
         ORDER BY
             CASE item_type
                 WHEN 'PRODUCT' THEN 1
@@ -26,4 +59,8 @@ def get_items() -> pd.DataFrame:
     """
 
     with get_connection() as connection:
-        return pd.read_sql_query(sql, connection)
+        return pd.read_sql_query(
+            sql,
+            connection,
+            params=params,
+        )
