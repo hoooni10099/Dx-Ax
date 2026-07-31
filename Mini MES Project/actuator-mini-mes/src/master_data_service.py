@@ -64,3 +64,49 @@ def get_items(
             connection,
             params=params,
         )
+
+def get_products() -> pd.DataFrame:
+    sql = """
+        SELECT
+            item_id,
+            item_code,
+            item_name
+        FROM item
+        WHERE item_type = 'PRODUCT'
+          AND is_active = 1
+        ORDER BY item_code
+    """
+
+    with get_connection() as connection:
+        return pd.read_sql_query(sql, connection)
+
+def get_bom_by_product(product_item_id: int) -> pd.DataFrame:
+    sql = """
+        SELECT
+            material.item_code AS "자재코드",
+            material.item_name AS "자재명",
+            bom.required_qty AS "소요수량",
+            process.process_name AS "투입공정",
+            routing_step.sequence_no AS "공정순서"
+        FROM bom
+        JOIN item AS material
+          ON material.item_id = bom.material_item_id
+        JOIN routing_step
+          ON routing_step.routing_step_id = bom.input_routing_step_id
+        JOIN process
+          ON process.process_id = routing_step.process_id
+        WHERE bom.product_item_id = ?
+          AND bom.is_active = 1
+          AND material.is_active = 1
+          AND routing_step.is_active = 1
+        ORDER BY
+            routing_step.sequence_no,
+            material.item_code
+    """
+
+    with get_connection() as connection:
+        return pd.read_sql_query(
+            sql,
+            connection,
+            params=[product_item_id],
+        )
