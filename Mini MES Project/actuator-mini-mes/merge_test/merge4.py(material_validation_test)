@@ -1,0 +1,152 @@
+from datetime import date, timedelta
+from src.db import get_connection
+
+from src.first_work_order_service import create_work_order_with_serials
+from src.second_production_service import start_product_serial
+from src.third_material_service import register_material_consumption
+
+
+WORK_ORDER_NO = "WO-20260731-MATERIAL-TEST-04"
+PROCESS_CODE = "PROC-MOTOR"
+
+
+# 1. 테스트 전용 작업지시와 Serial 생성
+work_order_id, serial_numbers = create_work_order_with_serials(
+    work_order_no=WORK_ORDER_NO,
+    product_item_code="ACT-SENSOR",
+    planned_qty=1,
+    due_date=(date.today() + timedelta(days=7)).isoformat(),
+)
+
+serial_no = serial_numbers[0]
+
+print("생성된 Serial:", serial_no)
+
+
+# 2. Serial 생산 시작: CREATED → IN_PROGRESS
+start_product_serial(serial_no)
+
+print("===== 1. 첫 번째 정상 투입 =====")
+
+consumption_id = register_material_consumption(
+    serial_no=serial_no,
+    process_code=PROCESS_CODE,
+    lot_no="LOT-MOTOR-20260701-A",
+    consumed_qty=1,
+)
+
+print("정상 등록:", consumption_id)
+
+
+# 3. 다른 LOT를 이용한 동일 자재 과투입 시도
+print("\n===== 2. 다른 LOT로 같은 자재 중복 투입 =====")
+
+try:
+    register_material_consumption(
+        serial_no=serial_no,
+        process_code=PROCESS_CODE,
+        lot_no="LOT-MOTOR-20260715-B",
+        consumed_qty=1,
+    )
+
+    print("테스트 실패: 과투입이 등록되었습니다.")
+
+except ValueError as error:
+    print("정상 차단:", error)
+
+print("\n===== 3. BOM과 다른 자재 LOT 투입 =====")
+
+try:
+    register_material_consumption(
+        serial_no=serial_no,
+        process_code=PROCESS_CODE,
+        lot_no="LOT-GEAR-20260701-A",
+        consumed_qty=1,
+    )
+
+    print("테스트 실패: BOM과 다른 자재가 등록되었습니다.")
+
+except ValueError as error:
+    print("정상 차단:", error)
+
+print("\n===== 4. LOT 잔여 재고 부족 =====")
+
+from src.db import get_connection
+
+STOCK_TEST_WORK_ORDER_NO = "WO-20260731-STOCK-TEST-02"
+TEST_LOT_NO = "LOT-HOUSING-STOCKOUT-TEST-02"
+
+
+# 1. 입고수량이 1개인 테스트 LOT 생성
+with get_connection() as connection:
+    housing_item = connection.execute(
+        """
+        SELECT item_id
+        FROM item
+        WHERE item_code = 'MAT-HOUSING'
+        """
+    ).fetchone()
+
+    if housing_item is None:
+        raise ValueError("MAT-HOUSING 품목을 찾을 수 없습니다.")
+
+    connection.execute(
+        """
+        INSERT INTO material_lot (
+            lot_no,
+            material_item_id,
+            received_qty,
+            received_date,
+            status,
+            created_at
+        )
+        VALUES (?, ?, 1, DATE('now'), 'AVAILABLE', CURRENT_TIMESTAMP)
+        """,
+        (
+            TEST_LOT_NO,
+            housing_item["item_id"],
+        ),
+    )
+
+    connection.commit()
+
+
+# 2. 재고 테스트용 Serial 두 개 생성
+_, stock_test_serials = create_work_order_with_serials(
+    work_order_no=STOCK_TEST_WORK_ORDER_NO,
+    product_item_code="ACT-SENSOR",
+    planned_qty=2,
+    due_date=(date.today() + timedelta(days=7)).isoformat(),
+)
+
+first_serial = stock_test_serials[0]
+second_serial = stock_test_serials[1]
+
+start_product_serial(first_serial)
+start_product_serial(second_serial)
+
+
+# 3. 첫 번째 Serial에 1개 투입하여 LOT 재고 소진
+first_consumption_id = register_material_consumption(
+    serial_no=first_serial,
+    process_code="PROC-MOTOR",
+    lot_no=TEST_LOT_NO,
+    consumed_qty=1,
+)
+
+print("테스트 LOT 첫 번째 투입:", first_consumption_id)
+
+
+# 4. 두 번째 Serial에 같은 LOT 투입 시도
+try:
+    register_material_consumption(
+        serial_no=second_serial,
+        process_code="PROC-MOTOR",
+        lot_no=TEST_LOT_NO,
+        consumed_qty=1,
+    )
+
+    print("테스트 실패: 소진된 LOT에서 자재가 투입되었습니다.")
+
+except ValueError as error:
+    print("정상 차단:", error)
