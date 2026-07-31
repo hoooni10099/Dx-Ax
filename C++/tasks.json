@@ -10,7 +10,7 @@
                 "${file}",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}",
-                "-lSQLiteCPP",
+                "-lSQLiteCpp",
                 "-lsqlite3"
             ],
             "options": {
