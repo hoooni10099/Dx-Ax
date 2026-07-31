@@ -110,3 +110,34 @@ def get_bom_by_product(product_item_id: int) -> pd.DataFrame:
             connection,
             params=[product_item_id],
         )
+
+def get_routing_by_product(product_item_id: int) -> pd.DataFrame:
+    sql = """
+        SELECT
+            routing_step.sequence_no AS "공정순서",
+            process.process_code AS "공정코드",
+            process.process_name AS "공정명",
+            CASE process.process_type
+                WHEN 'ASSEMBLY' THEN '조립'
+                WHEN 'INSPECTION' THEN '검사'
+                WHEN 'COMPLETION' THEN '완료'
+                ELSE process.process_type
+            END AS "공정유형",
+            CASE routing_step.is_required
+                WHEN 1 THEN '필수'
+                ELSE '선택'
+            END AS "필수여부"
+        FROM routing_step
+        JOIN process
+          ON process.process_id = routing_step.process_id
+        WHERE routing_step.product_item_id = ?
+          AND routing_step.is_active = 1
+        ORDER BY routing_step.sequence_no
+    """
+
+    with get_connection() as connection:
+        return pd.read_sql_query(
+            sql,
+            connection,
+            params=[product_item_id],
+        )
