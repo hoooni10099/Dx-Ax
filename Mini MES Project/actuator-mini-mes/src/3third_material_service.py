@@ -1,5 +1,4 @@
 from src.db import get_connection
-from datetime import datetime
 
 # PROC-MOTOR 공정에서 실제로 사용한 자재 LOT 기록(DC 모터, 하우징)
 def register_material_consumption(
@@ -170,6 +169,39 @@ def register_material_consumption(
                 "BOM 기준 투입수량과 일치하지 않습니다. "
                 f"필요수량: {bom['required_qty']}, "
                 f"입력수량: {consumed_qty}"
+            )
+        
+        # 같은 Serial·공정·BOM 자재에 이미 투입된 누적 수량을 조회한다.
+        # LOT가 달라도 동일한 자재라면 하나로 합산한다.
+        already_consumed_qty = connection.execute(
+            """
+            SELECT
+                COALESCE(SUM(mc.consumed_qty), 0) AS total
+            FROM material_consumption AS mc
+            JOIN material_lot AS used_lot
+                ON used_lot.material_lot_id = mc.material_lot_id
+            WHERE mc.product_serial_id = ?
+              AND mc.routing_step_id = ?
+              AND used_lot.material_item_id = ?
+            """,
+            (
+                production_info["product_serial_id"],
+                production_info["routing_step_id"],
+                material_lot["material_item_id"],
+            ),
+        ).fetchone()["total"]
+
+        total_after_consumption = (
+            already_consumed_qty + consumed_qty
+        )
+
+        if total_after_consumption > bom["required_qty"]:
+            raise ValueError(
+                "BOM 기준 수량을 초과하여 자재를 투입할 수 없습니다. "
+                f"자재: {material_lot['item_code']}, "
+                f"필요수량: {bom['required_qty']}, "
+                f"기존 투입수량: {already_consumed_qty}, "
+                f"신규 투입수량: {consumed_qty}"
             )
 
         consumed_total = connection.execute(
