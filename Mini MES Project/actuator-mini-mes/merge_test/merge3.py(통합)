@@ -1,0 +1,256 @@
+from datetime import date, timedelta
+
+from src.db import get_connection
+from src.first_work_order_service import (
+    create_work_order_with_serials,
+)
+from src.second_production_service import start_product_serial
+from src.third_material_service import (
+    register_material_consumption,
+    register_process_result,
+)
+from src.fourth_eol_service import (
+    register_eol_test_result,
+    complete_production,
+)
+
+
+PRODUCT_CODE = "ACT-SENSOR"
+WORK_ORDER_NO = "WO-20260731-INTEGRATION-03"
+PLANNED_QTY = 2
+DUE_DATE = (date.today() + timedelta(days=7)).isoformat()
+
+
+def get_normal_processes(product_code: str):
+    """EOL과 생산 완료를 제외한 일반 공정 목록을 조회한다."""
+
+    with get_connection() as connection:
+        return connection.execute(
+            """
+            SELECT
+                rs.routing_step_id,
+                rs.sequence_no,
+                p.process_code,
+                p.process_name
+            FROM routing_step AS rs
+            JOIN item AS product
+                ON product.item_id = rs.product_item_id
+            JOIN process AS p
+                ON p.process_id = rs.process_id
+            WHERE product.item_code = ?
+              AND rs.is_active = 1
+              AND rs.is_required = 1
+              AND p.process_code NOT IN (
+                    'PROC-EOL',
+                    'PROC-COMPLETE'
+              )
+            ORDER BY rs.sequence_no
+            """,
+            (product_code,),
+        ).fetchall()
+
+
+def get_step_materials(routing_step_id: int):
+    """
+    공정별 BOM 자재마다 사용 가능한 가장 오래된 LOT 하나를 조회한다.
+    """
+
+    with get_connection() as connection:
+        return connection.execute(
+            """
+            WITH available_lots AS (
+                SELECT
+                    material.item_code AS material_code,
+                    b.required_qty,
+                    ml.lot_no,
+                    ml.received_qty
+                        - COALESCE(used.consumed_qty, 0)
+                        AS remaining_qty,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY b.bom_id
+                        ORDER BY
+                            ml.received_date,
+                            ml.material_lot_id
+                    ) AS lot_rank
+                FROM bom AS b
+                JOIN item AS material
+                    ON material.item_id = b.material_item_id
+                JOIN material_lot AS ml
+                    ON ml.material_item_id = b.material_item_id
+                LEFT JOIN (
+                    SELECT
+                        material_lot_id,
+                        SUM(consumed_qty) AS consumed_qty
+                    FROM material_consumption
+                    GROUP BY material_lot_id
+                ) AS used
+                    ON used.material_lot_id = ml.material_lot_id
+                WHERE b.input_routing_step_id = ?
+                  AND b.is_active = 1
+                  AND ml.status = 'AVAILABLE'
+                  AND (
+                        ml.received_qty
+                        - COALESCE(used.consumed_qty, 0)
+                      ) >= b.required_qty
+            )
+            SELECT
+                material_code,
+                required_qty,
+                lot_no,
+                remaining_qty
+            FROM available_lots
+            WHERE lot_rank = 1
+            ORDER BY material_code
+            """,
+            (routing_step_id,),
+        ).fetchall()
+
+
+def run_normal_processes(serial_no: str):
+    """자재 투입 후 EOL 이전 일반 공정을 모두 PASS 처리한다."""
+
+    processes = get_normal_processes(PRODUCT_CODE)
+
+    for process in processes:
+        materials = get_step_materials(
+            process["routing_step_id"]
+        )
+
+        for material in materials:
+            consumption_id = register_material_consumption(
+                serial_no=serial_no,
+                process_code=process["process_code"],
+                lot_no=material["lot_no"],
+                consumed_qty=material["required_qty"],
+            )
+
+            print(
+                f"  자재 투입: {material['material_code']} / "
+                f"{material['lot_no']} / "
+                f"consumption_id={consumption_id}"
+            )
+
+        process_history_id = register_process_result(
+            serial_no=serial_no,
+            process_code=process["process_code"],
+            result="PASS",
+            remark="통합 테스트 정상 처리",
+        )
+
+        print(
+            f"  공정 완료: {process['process_code']} "
+            f"({process['process_name']}) / "
+            f"process_history_id={process_history_id}"
+        )
+
+
+print("===== 1. 작업지시 및 Serial 생성 =====")
+
+work_order_id, serial_numbers = create_work_order_with_serials(
+    work_order_no=WORK_ORDER_NO,
+    product_item_code=PRODUCT_CODE,
+    planned_qty=PLANNED_QTY,
+    due_date=DUE_DATE,
+)
+
+print("work_order_id:", work_order_id)
+print("serial_numbers:", serial_numbers)
+
+pass_serial = serial_numbers[0]
+fail_serial = serial_numbers[1]
+
+
+print("\n===== 2. 첫 번째 Serial 생산 =====")
+
+start_product_serial(pass_serial)
+run_normal_processes(pass_serial)
+
+pass_eol_result = register_eol_test_result(
+    serial_no=pass_serial,
+    forward_ok=True,
+    reverse_ok=True,
+    forward_time_ms=800,
+    reverse_time_ms=820,
+    max_current_ma=1200.0,
+    target_angle_deg=90.0,
+    actual_angle_deg=89.5,
+)
+
+print("EOL 결과:", pass_eol_result)
+
+completion_result = complete_production(pass_serial)
+print("생산 완료 결과:", completion_result)
+
+
+print("\n===== 3. 두 번째 Serial 생산 =====")
+
+start_product_serial(fail_serial)
+run_normal_processes(fail_serial)
+
+fail_eol_result = register_eol_test_result(
+    serial_no=fail_serial,
+    forward_ok=False,
+    reverse_ok=True,
+    forward_time_ms=1100,
+    reverse_time_ms=850,
+    max_current_ma=1600.0,
+    target_angle_deg=90.0,
+    actual_angle_deg=86.0,
+)
+
+print("EOL 결과:", fail_eol_result)
+
+
+print("\n===== 4. 최종 DB 상태 확인 =====")
+
+with get_connection() as connection:
+    work_order = connection.execute(
+        """
+        SELECT
+            work_order_no,
+            planned_qty,
+            status,
+            started_at,
+            completed_at
+        FROM work_order
+        WHERE work_order_id = ?
+        """,
+        (work_order_id,),
+    ).fetchone()
+
+    serial_results = connection.execute(
+        """
+        SELECT
+            serial_no,
+            status,
+            started_at,
+            completed_at
+        FROM product_serial
+        WHERE work_order_id = ?
+        ORDER BY product_serial_id
+        """,
+        (work_order_id,),
+    ).fetchall()
+
+    result_summary = connection.execute(
+        """
+        SELECT
+            status,
+            COUNT(*) AS quantity
+        FROM product_serial
+        WHERE work_order_id = ?
+        GROUP BY status
+        ORDER BY status
+        """,
+        (work_order_id,),
+    ).fetchall()
+
+print("작업지시:", dict(work_order))
+
+print("Serial 결과:")
+for row in serial_results:
+    print(dict(row))
+
+print("결과 집계:")
+for row in result_summary:
+    print(dict(row))
