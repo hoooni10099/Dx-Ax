@@ -15,21 +15,6 @@ class ServiceResult:
     success: bool
     message: str
 
-def get_materials() -> pd.DataFrame:
-    sql = """
-        SELECT
-            item_id,
-            item_code,
-            item_name
-        FROM item
-        WHERE item_type = 'MATERIAL'
-          AND is_active = 1
-        ORDER BY item_code
-    """
-
-    with get_connection() as connection:
-        return pd.read_sql_query(sql, connection)
-
 def get_material_lots(
     material_item_id: int | None = None,
     status: str | None = None,
