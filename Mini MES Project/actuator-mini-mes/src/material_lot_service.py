@@ -18,10 +18,11 @@ class ServiceResult:
 def get_material_lots(
     material_item_id: int | None = None,
     status: str | None = None,
-    keyword: str = "",
+    keyword: str | None = None,
     received_date_from: str | None = None,
     received_date_to: str | None = None,
 ) -> pd.DataFrame:
+    keyword = (keyword or "").strip()
     sql = """
         SELECT
             material_lot.lot_no AS "LOT번호",
@@ -56,7 +57,7 @@ def get_material_lots(
         """
         params.append(status)
 
-    keyword = keyword.strip()
+    keyword = (keyword or "").strip()
 
     if keyword:
         sql += """
