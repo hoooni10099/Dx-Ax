@@ -164,7 +164,7 @@ def update_work_order_status(
             UPDATE work_order
             SET
                 status = 'COMPLETED',
-                completed_at = CURRENT_TIMESTAMP
+                completed_at = datetime('now', 'localtime')
             WHERE work_order_id = ?
               AND status = 'IN_PROGRESS'
             """,
