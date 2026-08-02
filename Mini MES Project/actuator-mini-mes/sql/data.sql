@@ -1,3 +1,5 @@
+-- 업데이트 미적용
+
 -- item TABLE
 INSERT INTO item (
     item_code,
