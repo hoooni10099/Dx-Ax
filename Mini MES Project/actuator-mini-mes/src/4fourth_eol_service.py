@@ -248,8 +248,8 @@ def register_eol_test_result(
                 ?,
                 ?,
                 ?,
-                CURRENT_TIMESTAMP,
-                CURRENT_TIMESTAMP,
+                datetime('now', 'localtime'),
+                datetime('now', 'localtime'),
                 ?
             )
             """,
@@ -309,7 +309,7 @@ def register_eol_test_result(
                 UPDATE product_serial
                 SET
                     status = 'FAIL',
-                    completed_at = CURRENT_TIMESTAMP
+                    completed_at = datetime('now', 'localtime')
                 WHERE product_serial_id = ?
                 AND status = 'IN_PROGRESS'
                 """,
@@ -498,8 +498,8 @@ def complete_production(serial_no: str) -> dict:
                 ?,
                 ?,
                 'PASS',
-                CURRENT_TIMESTAMP,
-                CURRENT_TIMESTAMP,
+                datetime('now', 'localtime'),
+                datetime('now', 'localtime'),
                 ?
             )
             """,
@@ -520,7 +520,7 @@ def complete_production(serial_no: str) -> dict:
             UPDATE product_serial
             SET
                 status = 'PASS',
-                completed_at = CURRENT_TIMESTAMP
+                completed_at = datetime('now', 'localtime')
             WHERE product_serial_id = ?
               AND status = 'IN_PROGRESS'
             """,
