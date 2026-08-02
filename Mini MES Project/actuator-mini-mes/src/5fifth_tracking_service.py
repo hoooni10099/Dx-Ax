@@ -440,4 +440,3 @@ def get_material_lot_summary(lot_no: str) -> dict:
         )
 
         return result
-
