@@ -48,7 +48,7 @@ def start_product_serial(serial_no: str) -> None:
             UPDATE product_serial
             SET
                 status = 'IN_PROGRESS',
-                started_at = CURRENT_TIMESTAMP
+                started_at = datetime('now', 'localtime')
             WHERE product_serial_id = ?
             """,
             (product_serial["product_serial_id"],),
@@ -61,7 +61,7 @@ def start_product_serial(serial_no: str) -> None:
                 UPDATE work_order
                 SET
                     status = 'IN_PROGRESS',
-                    started_at = CURRENT_TIMESTAMP
+                    started_at = datetime('now', 'localtime')
                 WHERE work_order_id = ?
                 """,
                 (product_serial["work_order_id"],),
