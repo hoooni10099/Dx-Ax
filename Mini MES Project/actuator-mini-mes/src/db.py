@@ -11,7 +11,7 @@ def database_exists() -> bool:
 
 def get_connection() -> sqlite3.Connection:
     if not database_exists():
-        raise FileNotFoundError(f"SQLIite 데이터베이스 파일을 찾을 수 없습니다 : {DB_PATH}")
+        raise FileNotFoundError(f"SQLite 데이터베이스 파일을 찾을 수 없습니다 : {DB_PATH}")
 
     connection = sqlite3.connect(DB_PATH)
     connection.row_factory = sqlite3.Row
