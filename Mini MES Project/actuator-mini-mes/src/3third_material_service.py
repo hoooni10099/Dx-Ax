@@ -432,7 +432,14 @@ def register_process_result(
                 completed_at,
                 remark
             )
-            VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)
+            VALUES (
+                ?,
+                ?,
+                ?,
+                datetime('now', 'localtime'),
+                datetime('now', 'localtime'),
+                ?
+            )
             """,
             (
                 product_serial["product_serial_id"],
