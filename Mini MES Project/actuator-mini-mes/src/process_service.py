@@ -17,7 +17,7 @@ class ServiceResult:
     message: str
 
 def get_process_ready_serials() -> pd.DataFrame:
-    """다음 공정을 등록할 수 있는 제품 Serial을 조회한다."""
+    """다음 일반 공정을 등록할 수 있는 제품 Serial을 조회한다."""
 
     sql = """
         SELECT
@@ -41,14 +41,18 @@ def get_process_ready_serials() -> pd.DataFrame:
         JOIN routing_step AS rs
           ON rs.product_item_id = wo.product_item_id
          AND rs.is_active = 1
+         AND rs.is_required = 1
         JOIN process AS p
           ON p.process_id = rs.process_id
         WHERE ps.status IN ('CREATED', 'IN_PROGRESS')
+          AND wo.status IN ('PLANNED', 'IN_PROGRESS')
+          AND p.process_code NOT IN ('PROC-EOL', 'PROC-COMPLETE')
           AND rs.routing_step_id = (
               SELECT rs_next.routing_step_id
               FROM routing_step AS rs_next
               WHERE rs_next.product_item_id = wo.product_item_id
                 AND rs_next.is_active = 1
+                AND rs_next.is_required = 1
                 AND NOT EXISTS (
                     SELECT 1
                     FROM process_history AS ph
@@ -380,6 +384,21 @@ def register_process_result(
                     ),
                 )
 
+            connection.execute(
+                """
+                UPDATE work_order
+                SET
+                    status = 'IN_PROGRESS',
+                    started_at = COALESCE(started_at, ?)
+                WHERE work_order_id = ?
+                AND status = 'PLANNED'
+                """,
+                (
+                    completed_at,
+                    process_target["work_order_id"],
+                ),
+            )
+
             if result == "FAIL":
                 connection.execute(
                     """
@@ -401,6 +420,7 @@ def register_process_result(
                     connection,
                     process_target["work_order_id"],
                 )
+
             else:
                 connection.execute(
                     """
@@ -415,20 +435,6 @@ def register_process_result(
                         product_serial_id,
                     ),
                 )
-
-            connection.execute(
-                """
-                UPDATE work_order
-                SET
-                    status = 'IN_PROGRESS',
-                    started_at = COALESCE(started_at, ?)
-                WHERE work_order_id = ?
-                """,
-                (
-                    completed_at,
-                    process_target["work_order_id"],
-                ),
-            )
 
             connection.commit()
 
@@ -680,6 +686,7 @@ def register_eol_test_result(
             JOIN routing_step AS rs
               ON rs.product_item_id = wo.product_item_id
              AND rs.is_active = 1
+             AND rs.is_required = 1
             JOIN process AS p
               ON p.process_id = rs.process_id
             WHERE ps.product_serial_id = ?
@@ -698,6 +705,7 @@ def register_eol_test_result(
                   FROM routing_step AS rs_next
                   WHERE rs_next.product_item_id = wo.product_item_id
                     AND rs_next.is_active = 1
+                    AND rs_next.is_required = 1
                     AND NOT EXISTS (
                         SELECT 1
                         FROM process_history AS ph_next
