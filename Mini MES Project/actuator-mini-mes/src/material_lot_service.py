@@ -15,14 +15,28 @@ class ServiceResult:
     success: bool
     message: str
 
+def get_materials() -> pd.DataFrame:
+    sql = """
+        SELECT
+            item_id,
+            item_code,
+            item_name
+        FROM item
+        WHERE item_type = 'MATERIAL'
+          AND is_active = 1
+        ORDER BY item_code
+    """
+
+    with get_connection() as connection:
+        return pd.read_sql_query(sql, connection)
+
 def get_material_lots(
     material_item_id: int | None = None,
     status: str | None = None,
-    keyword: str | None = None,
+    keyword: str = "",
     received_date_from: str | None = None,
     received_date_to: str | None = None,
 ) -> pd.DataFrame:
-    keyword = (keyword or "").strip()
     sql = """
         SELECT
             material_lot.lot_no AS "LOT번호",
@@ -57,7 +71,7 @@ def get_material_lots(
         """
         params.append(status)
 
-    keyword = (keyword or "").strip()
+    keyword = keyword.strip()
 
     if keyword:
         sql += """
@@ -184,7 +198,7 @@ def create_material_lot(
                     status,
                     created_at
                 )
-                VALUES (?, ?, ?, ?, 'AVAILABLE', datetime('now', 'localtime'))
+                VALUES (?, ?, ?, ?, 'AVAILABLE', CURRENT_TIMESTAMP)
                 """,
                 (
                     lot_no,
