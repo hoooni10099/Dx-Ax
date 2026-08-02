@@ -177,6 +177,18 @@ with st.form("process_result_form"):
         placeholder="작업 내용이나 특이사항을 입력하세요.",
     )
 
+    result = st.radio(
+        "공정 결과",
+        options=["PASS", "FAIL"],
+        horizontal=True,
+    )
+
+    if result == "FAIL":
+        st.warning(
+            "FAIL로 등록하면 해당 Serial은 종료되며 "
+            "이후 공정을 진행할 수 없습니다."
+        )
+
     submitted = st.form_submit_button(
         "공정 실적 등록",
         type="primary",
@@ -185,7 +197,7 @@ with st.form("process_result_form"):
 
 
 if submitted:
-    result = register_process_result(
+    service_result = register_process_result(
         product_serial_id=int(
             selected_serial["product_serial_id"]
         ),
@@ -193,17 +205,25 @@ if submitted:
             selected_serial["routing_step_id"]
         ),
         selected_lot_ids=selected_lot_ids,
-        result="PASS",
+        result=result,
         remark=remark,
     )
 
-    if result.success:
+    if service_result.success:
         st.session_state["process_success_message"] = (
-            result.message
+            service_result.message
         )
         st.rerun()
     else:
-        st.error(result.message)
+        st.error(service_result.message)
+
+        if result.success:
+            st.session_state["process_success_message"] = (
+                result.message
+            )
+            st.rerun()
+        else:
+            st.error(result.message)
 
 st.divider()
 st.subheader("선택한 Serial의 등록 이력")
