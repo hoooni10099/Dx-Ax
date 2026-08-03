@@ -1,8 +1,282 @@
 from __future__ import annotations
 
 import streamlit as st
+import altair as alt
+import pandas as pd
 
 from src.ui import show_database_status
+
+from src.dashboard_service import (
+    get_current_process_counts,
+    get_daily_production,
+    get_quality_result_counts,
+    get_work_order_progress,
+)
+
+from src.material_lot_service import (
+    get_available_stock_by_material,
+    get_material_inventory_metrics,
+)
+
+def show_dashboard_charts():
+    work_order_df = get_work_order_progress()
+    process_df = get_current_process_counts()
+    daily_df = get_daily_production()
+    quality_df = get_quality_result_counts()
+
+    left_column, right_column = st.columns([2, 1])
+
+    with left_column:
+        show_work_order_progress_chart(work_order_df)
+
+    with right_column:
+        show_quality_chart(quality_df)
+
+    left_column, right_column = st.columns(2)
+
+    with left_column:
+        show_current_process_chart(process_df)
+
+    with right_column:
+        show_daily_production_chart(daily_df)
+
+def show_work_order_progress_chart(df: pd.DataFrame):
+    st.subheader("작업지시별 계획 대비 완료")
+
+    if df.empty:
+        st.info("표시할 작업지시가 없습니다.")
+        return
+
+    chart_df = df.melt(
+        id_vars=[
+            "work_order_no",
+            "item_name",
+        ],
+        value_vars=[
+            "planned_qty",
+            "completed_qty",
+        ],
+        var_name="quantity_type",
+        value_name="quantity",
+    )
+
+    chart_df["quantity_type"] = chart_df["quantity_type"].map(
+        {
+            "planned_qty": "계획",
+            "completed_qty": "완료",
+        }
+    )
+
+    chart = (
+        alt.Chart(chart_df)
+        .mark_bar()
+        .encode(
+            x=alt.X(
+                "quantity:Q",
+                title="수량",
+                axis=alt.Axis(tickMinStep=1),
+            ),
+            y=alt.Y(
+                "work_order_no:N",
+                title=None,
+                sort=None,
+            ),
+            color=alt.Color(
+                "quantity_type:N",
+                title="구분",
+                scale=alt.Scale(
+                    domain=["계획", "완료"],
+                    range=["#CBD5E1", "#2563EB"],
+                ),
+            ),
+            yOffset="quantity_type:N",
+            tooltip=[
+                alt.Tooltip(
+                    "work_order_no:N",
+                    title="작업지시",
+                ),
+                alt.Tooltip(
+                    "item_name:N",
+                    title="제품",
+                ),
+                alt.Tooltip(
+                    "quantity_type:N",
+                    title="구분",
+                ),
+                alt.Tooltip(
+                    "quantity:Q",
+                    title="수량",
+                ),
+            ],
+        )
+        .properties(height=280)
+    )
+
+    st.altair_chart(chart, width="stretch")
+
+def show_quality_chart(df: pd.DataFrame):
+    st.subheader("합격·불합격")
+
+    all_results = pd.DataFrame(
+        {
+            "result_name": ["합격", "불합격"],
+        }
+    )
+
+    chart_df = all_results.merge(
+        df,
+        on="result_name",
+        how="left",
+    )
+
+    chart_df["result_qty"] = (
+        chart_df["result_qty"]
+        .fillna(0)
+        .astype(int)
+    )
+
+    total_qty = int(chart_df["result_qty"].sum())
+    pass_qty = int(
+        chart_df.loc[
+            chart_df["result_name"] == "합격",
+            "result_qty",
+        ].sum()
+    )
+
+    if total_qty == 0:
+        st.info("완료된 검사 결과가 없습니다.")
+        return
+
+    pass_rate = pass_qty / total_qty * 100
+
+    chart = (
+        alt.Chart(chart_df)
+        .mark_arc(innerRadius=55, outerRadius=85)
+        .encode(
+            theta=alt.Theta(
+                "result_qty:Q",
+                stack=True,
+            ),
+            color=alt.Color(
+                "result_name:N",
+                title="판정",
+                scale=alt.Scale(
+                    domain=["합격", "불합격"],
+                    range=["#16A34A", "#DC2626"],
+                ),
+            ),
+            tooltip=[
+                alt.Tooltip(
+                    "result_name:N",
+                    title="판정",
+                ),
+                alt.Tooltip(
+                    "result_qty:Q",
+                    title="수량",
+                ),
+            ],
+        )
+        .properties(height=250)
+    )
+
+    st.altair_chart(chart, width="stretch")
+    st.caption(
+        f"총 {total_qty}개 · 합격률 {pass_rate:.1f}%"
+    )
+
+def show_current_process_chart(df: pd.DataFrame):
+    st.subheader("공정별 현재 제품 수량")
+
+    if df.empty:
+        st.info("현재 공정 대기 중인 제품이 없습니다.")
+        return
+
+    chart = (
+        alt.Chart(df)
+        .mark_bar(
+            color="#F59E0B",
+            cornerRadiusTopLeft=4,
+            cornerRadiusTopRight=4,
+        )
+        .encode(
+            x=alt.X(
+                "process_name:N",
+                title=None,
+                sort=alt.EncodingSortField(
+                    field="sequence_no",
+                    order="ascending",
+                ),
+            ),
+            y=alt.Y(
+                "product_qty:Q",
+                title="제품 수량",
+                axis=alt.Axis(tickMinStep=1),
+            ),
+            tooltip=[
+                alt.Tooltip(
+                    "process_name:N",
+                    title="공정",
+                ),
+                alt.Tooltip(
+                    "product_qty:Q",
+                    title="수량",
+                ),
+            ],
+        )
+        .properties(height=280)
+    )
+
+    st.altair_chart(chart, width="stretch")
+
+def show_daily_production_chart(df: pd.DataFrame):
+    st.subheader("최근 7일 생산량")
+
+    if df.empty:
+        st.info("최근 생산실적이 없습니다.")
+        return
+
+    chart_df = df.copy()
+    chart_df["production_date"] = pd.to_datetime(
+        chart_df["production_date"]
+    )
+
+    line = (
+        alt.Chart(chart_df)
+        .mark_line(
+            color="#2563EB",
+            point=True,
+            strokeWidth=3,
+        )
+        .encode(
+            x=alt.X(
+                "production_date:T",
+                title=None,
+                axis=alt.Axis(format="%m-%d"),
+            ),
+            y=alt.Y(
+                "production_qty:Q",
+                title="생산 수량",
+                axis=alt.Axis(tickMinStep=1),
+            ),
+            tooltip=[
+                alt.Tooltip(
+                    "production_date:T",
+                    title="생산일",
+                    format="%Y-%m-%d",
+                ),
+                alt.Tooltip(
+                    "production_qty:Q",
+                    title="생산량",
+                ),
+            ],
+        )
+    )
+
+    st.altair_chart(
+        line.properties(height=280),
+        width="stretch",
+    )
+
 
 st.set_page_config(
     page_title="Actuator Mini MES",
@@ -254,35 +528,13 @@ st.divider()
 
 guide_column, status_column = st.columns([2, 1])
 
-with guide_column:
-    st.subheader("시작 방법")
+st.title("Mini MES 대시보드")
+st.caption("작업지시, 공정 진행 및 생산실적을 확인합니다.")
 
-    st.markdown(
-        """
-        1. 왼쪽 사이드바에서 사용할 화면을 선택합니다.
-        2. 자재 LOT와 작업지시를 등록합니다.
-        3. Serial을 발급하고 공정 순서대로 생산을 진행합니다.
-        4. EOL 검사와 생산 완료 처리를 수행합니다.
-        5. 정방향·역방향 추적 화면에서 생산 이력을 확인합니다.
-        """
-    )
+show_dashboard_charts()
 
-with status_column:
-    st.subheader("구현 범위")
+print("자재 재고 핵심 지표")
+print(get_material_inventory_metrics())
 
-    st.success("1차 Mini MES 생산 사이클 구현 완료")
-
-    st.markdown(
-        """
-        - 기준정보 조회
-        - 자재 LOT 관리
-        - 작업지시 및 Serial 관리
-        - 공정 작업실적 등록
-        - EOL 검사 및 생산 완료
-        - 정방향·역방향 추적
-        """
-    )
-
-st.caption(
-    "Actuator Mini MES · Python · SQLite · Streamlit"
-)
+print("\n자재별 가용 재고")
+print(get_available_stock_by_material())
