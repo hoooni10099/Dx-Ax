@@ -34,6 +34,8 @@ CREATE TABLE material_lot (material_lot_id INTEGER PRIMARY KEY,
                            received_qty INTEGER NOT NULL CHECK (received_qty > 0),
                            received_date TEXT NOT NULL,
                            status TEXT NOT NULL DEFAULT 'AVAILABLE' CHECK (status IN ('AVAILABLE', 'EXHAUSTED', 'BLOCKED')),
+                           blocked_reason TEXT,
+                           blocked_at TEXT,
                            created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
                            FOREIGN KEY (material_item_id) REFERENCES item (item_id));
 CREATE TABLE work_order (work_order_id INTEGER PRIMARY KEY,
