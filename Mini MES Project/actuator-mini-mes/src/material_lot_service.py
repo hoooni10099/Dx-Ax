@@ -37,6 +37,7 @@ def get_material_lots(
     received_date_from: str | None = None,
     received_date_to: str | None = None,
 ) -> pd.DataFrame:
+    keyword = (keyword or "").strip()
     sql = """
         SELECT
             material_lot.lot_no AS "LOT번호",
@@ -71,7 +72,7 @@ def get_material_lots(
         """
         params.append(status)
 
-    keyword = keyword.strip()
+    keyword = (keyword or "").strip()
 
     if keyword:
         sql += """
