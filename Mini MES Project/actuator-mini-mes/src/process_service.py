@@ -868,6 +868,7 @@ def get_completion_ready_serials() -> pd.DataFrame:
         JOIN routing_step AS rs
           ON rs.product_item_id = wo.product_item_id
          AND rs.is_active = 1
+         AND rs.is_required = 1
         JOIN process AS p
           ON p.process_id = rs.process_id
         WHERE ps.status = 'IN_PROGRESS'
@@ -884,6 +885,7 @@ def get_completion_ready_serials() -> pd.DataFrame:
               FROM routing_step AS rs_next
               WHERE rs_next.product_item_id = wo.product_item_id
                 AND rs_next.is_active = 1
+                AND rs_next.is_required = 1
                 AND NOT EXISTS (
                     SELECT 1
                     FROM process_history AS ph_next
@@ -923,6 +925,7 @@ def complete_product(
             JOIN routing_step AS rs
               ON rs.product_item_id = wo.product_item_id
              AND rs.is_active = 1
+             AND rs.is_required = 1
             JOIN process AS p
               ON p.process_id = rs.process_id
             WHERE ps.product_serial_id = ?
@@ -941,6 +944,7 @@ def complete_product(
                   FROM routing_step AS rs_next
                   WHERE rs_next.product_item_id = wo.product_item_id
                     AND rs_next.is_active = 1
+                    AND rs_next.is_required = 1
                     AND NOT EXISTS (
                         SELECT 1
                         FROM process_history AS ph_next
