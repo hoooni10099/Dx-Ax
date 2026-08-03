@@ -251,107 +251,107 @@ else:
                     hide_index=True,
                 )
 
-st.divider()
-st.subheader("Serial 공정 상세")
+                st.divider()
+                st.subheader("Serial 공정 상세")
 
-serial_options = dict(
-    zip(
-        filtered_serial_status["serial_no"],
-        filtered_serial_status["product_serial_id"],
-    )
-)
+                serial_options = dict(
+                    zip(
+                        filtered_serial_status["serial_no"],
+                        filtered_serial_status["product_serial_id"],
+                    )
+                )
 
-selected_serial_no = st.selectbox(
-    "상세 조회할 Serial",
-    options=list(serial_options.keys()),
-)
+                selected_serial_no = st.selectbox(
+                    "상세 조회할 Serial",
+                    options=list(serial_options.keys()),
+                )
 
-selected_product_serial_id = serial_options[
-    selected_serial_no
-]
+                selected_product_serial_id = serial_options[
+                    selected_serial_no
+                ]
 
-selected_serial_row = filtered_serial_status[
-    filtered_serial_status["product_serial_id"]
-    == selected_product_serial_id
-].iloc[0]
+                selected_serial_row = filtered_serial_status[
+                    filtered_serial_status["product_serial_id"]
+                    == selected_product_serial_id
+                ].iloc[0]
 
-progress_rate = float(
-    selected_serial_row["process_progress_rate"]
-)
+                progress_rate = float(
+                    selected_serial_row["process_progress_rate"]
+                )
 
-st.write(
-    f"공정 진행률: "
-    f"{progress_rate:.1f}% "
-    f"({int(selected_serial_row['completed_process_qty'])}"
-    f"/{int(selected_serial_row['total_process_qty'])})"
-)
+                st.write(
+                    f"공정 진행률: "
+                    f"{progress_rate:.1f}% "
+                    f"({int(selected_serial_row['completed_process_qty'])}"
+                    f"/{int(selected_serial_row['total_process_qty'])})"
+                )
 
-st.progress(
-    min(max(progress_rate / 100.0, 0.0), 1.0)
-)
+                st.progress(
+                    min(max(progress_rate / 100.0, 0.0), 1.0)
+                )
 
-serial_process_status = get_serial_process_status(
-    selected_product_serial_id
-)
+                serial_process_status = get_serial_process_status(
+                    selected_product_serial_id
+                )
 
-if serial_process_status.empty:
-    st.info("조회할 공정 정보가 없습니다.")
+                if serial_process_status.empty:
+                    st.info("조회할 공정 정보가 없습니다.")
 
-else:
-    process_display_dataframe = serial_process_status.copy()
+                else:
+                    process_display_dataframe = serial_process_status.copy()
 
-    process_display_dataframe["process_status"] = (
-        process_display_dataframe["process_status"].map(
-            {
-                "NOT_STARTED": "대기",
-                "IN_PROGRESS": "진행 중",
-                "PASS": "합격",
-                "FAIL": "불합격",
-            }
-        )
-    )
+                    process_display_dataframe["process_status"] = (
+                        process_display_dataframe["process_status"].map(
+                            {
+                                "NOT_STARTED": "대기",
+                                "IN_PROGRESS": "진행 중",
+                                "PASS": "합격",
+                                "FAIL": "불합격",
+                            }
+                        )
+                    )
 
-    process_display_dataframe["is_required"] = (
-        process_display_dataframe["is_required"].map(
-            {
-                1: "필수",
-                0: "선택",
-            }
-        )
-    )
+                    process_display_dataframe["is_required"] = (
+                        process_display_dataframe["is_required"].map(
+                            {
+                                1: "필수",
+                                0: "선택",
+                            }
+                        )
+                    )
 
-    process_display_dataframe = (
-        process_display_dataframe.rename(
-            columns={
-                "sequence_no": "순서",
-                "process_code": "공정 코드",
-                "process_name": "공정명",
-                "process_type": "공정 유형",
-                "is_required": "필수 여부",
-                "process_status": "진행 상태",
-                "result": "처리 결과",
-                "started_at": "시작 시각",
-                "completed_at": "완료 시각",
-                "remark": "비고",
-            }
-        )
-    )
+                    process_display_dataframe = (
+                        process_display_dataframe.rename(
+                            columns={
+                                "sequence_no": "순서",
+                                "process_code": "공정 코드",
+                                "process_name": "공정명",
+                                "process_type": "공정 유형",
+                                "is_required": "필수 여부",
+                                "process_status": "진행 상태",
+                                "result": "처리 결과",
+                                "started_at": "시작 시각",
+                                "completed_at": "완료 시각",
+                                "remark": "비고",
+                            }
+                        )
+                    )
 
-    st.dataframe(
-        process_display_dataframe[
-            [
-                "순서",
-                "공정 코드",
-                "공정명",
-                "공정 유형",
-                "필수 여부",
-                "진행 상태",
-                "처리 결과",
-                "시작 시각",
-                "완료 시각",
-                "비고",
-            ]
-        ],
-        use_container_width=True,
-        hide_index=True,
-    )
+                    st.dataframe(
+                        process_display_dataframe[
+                            [
+                                "순서",
+                                "공정 코드",
+                                "공정명",
+                                "공정 유형",
+                                "필수 여부",
+                                "진행 상태",
+                                "처리 결과",
+                                "시작 시각",
+                                "완료 시각",
+                                "비고",
+                            ]
+                        ],
+                        use_container_width=True,
+                        hide_index=True,
+                    )
