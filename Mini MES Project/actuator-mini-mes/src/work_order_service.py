@@ -28,7 +28,6 @@ def get_active_products() -> pd.DataFrame:
     with get_connection() as connection:
         return pd.read_sql_query(sql, connection)
 
-
 def get_work_orders(
     product_item_id: int | None = None,
     status: str | None = None,
@@ -497,4 +496,3 @@ def get_product_serials() -> pd.DataFrame:
             "created_at": "발급일시",
         }
     ).drop(columns=["product_serial_id"])
-
