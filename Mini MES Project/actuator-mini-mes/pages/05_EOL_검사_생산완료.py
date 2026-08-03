@@ -3,6 +3,8 @@ from __future__ import annotations
 import streamlit as st
 
 from src.process_service import (
+    complete_product,
+    get_completion_ready_serials,
     get_eol_ready_serials,
     register_eol_test_result,
 )
@@ -216,4 +218,100 @@ else:
         except Exception as error:
             st.error(
                 f"EOL 검사 결과 등록 중 오류가 발생했습니다: {error}"
+            )
+
+st.divider()
+
+st.subheader("2. 생산 완료 처리")
+
+if "completion_success_message" in st.session_state:
+    st.success(
+        st.session_state.pop("completion_success_message")
+    )
+
+completion_ready_serials = get_completion_ready_serials()
+
+if completion_ready_serials.empty:
+    st.info("현재 생산 완료 처리할 수 있는 제품 Serial이 없습니다.")
+
+else:
+    completion_options = {
+        (
+            f"{row['serial_no']} | "
+            f"{row['item_code']} | "
+            f"{row['work_order_no']}"
+        ): index
+        for index, row in completion_ready_serials.iterrows()
+    }
+
+    selected_completion_label = st.selectbox(
+        "생산 완료 대상 Serial",
+        options=list(completion_options.keys()),
+        key="completion_serial_selectbox",
+    )
+
+    selected_completion_index = completion_options[
+        selected_completion_label
+    ]
+
+    selected_completion_serial = completion_ready_serials.loc[
+        selected_completion_index
+    ]
+
+    column1, column2, column3 = st.columns(3)
+
+    with column1:
+        st.metric(
+            "Serial Number",
+            selected_completion_serial["serial_no"],
+        )
+
+    with column2:
+        st.metric(
+            "제품",
+            selected_completion_serial["item_name"],
+        )
+
+    with column3:
+        st.metric(
+            "작업지시",
+            selected_completion_serial["work_order_no"],
+        )
+
+    st.info(
+        "생산 완료 처리하면 해당 Serial은 최종 PASS 상태로 종료됩니다."
+    )
+
+    if st.button(
+        "생산 완료 처리",
+        type="primary",
+        key="complete_product_button",
+    ):
+        try:
+            complete_product(
+                product_serial_id=int(
+                    selected_completion_serial[
+                        "product_serial_id"
+                    ]
+                ),
+                routing_step_id=int(
+                    selected_completion_serial[
+                        "routing_step_id"
+                    ]
+                ),
+            )
+
+            st.session_state["completion_success_message"] = (
+                f"{selected_completion_serial['serial_no']}의 "
+                "생산 완료 처리가 정상적으로 등록되었습니다."
+            )
+
+            st.rerun()
+
+        except ValueError as error:
+            st.error(str(error))
+
+        except Exception as error:
+            st.error(
+                f"생산 완료 처리 중 오류가 발생했습니다: {error}"
             )
