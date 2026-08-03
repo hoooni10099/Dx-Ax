@@ -532,9 +532,3 @@ st.title("Mini MES 대시보드")
 st.caption("작업지시, 공정 진행 및 생산실적을 확인합니다.")
 
 show_dashboard_charts()
-
-print("자재 재고 핵심 지표")
-print(get_material_inventory_metrics())
-
-print("\n자재별 가용 재고")
-print(get_available_stock_by_material())
