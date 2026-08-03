@@ -29,10 +29,59 @@ page_title(
 show_database_status()
 
 st.subheader("1. EOL 검사 결과 등록")
-if "eol_success_message" in st.session_state:
-    st.success(
-        st.session_state.pop("eol_success_message")
+eol_result_message = st.session_state.get(
+    "eol_result_message"
+)
+
+if eol_result_message is not None:
+    st.markdown(
+        "#### 최근 EOL 검사 결과 "
+        f"— {eol_result_message['serial_no']}"
     )
+    if eol_result_message["result"] == "PASS":
+        st.success(
+            "EOL 검사 결과가 PASS로 등록되었습니다. "
+            "이제 생산 완료 처리가 가능합니다."
+        )
+    else:
+        st.error(
+            "EOL 검사 결과가 FAIL로 등록되었습니다."
+        )
+
+    result_column1, result_column2 = st.columns(2)
+
+    with result_column1:
+        st.metric(
+            "최종 판정",
+            eol_result_message["result"],
+        )
+
+    with result_column2:
+        position_error = eol_result_message[
+            "position_error_deg"
+        ]
+
+        st.metric(
+            "위치 오차",
+            (
+                f"{position_error:.1f}°"
+                if position_error is not None
+                else "검사 대상 아님"
+            ),
+        )
+
+    if eol_result_message["failure_reason"]:
+        st.warning(
+            "불합격 사유: "
+            f"{eol_result_message['failure_reason']}"
+        )
+
+    if st.button(
+        "검사 결과 확인 완료",
+        key="clear_eol_result_message",
+    ):
+        del st.session_state["eol_result_message"]
+        st.rerun()
 
 eol_ready_serials = get_eol_ready_serials()
 
@@ -197,18 +246,17 @@ else:
                 ),
             )
 
-            if result == "PASS":
-                st.session_state["eol_success_message"] = (
-                    "EOL 검사를 통과했습니다. "
-                    "이제 생산 완료 처리가 가능합니다."
-                )
-            else:
-                message = "EOL 검사 결과가 FAIL로 등록되었습니다."
-
-                if failure_reason:
-                    message += f" 불합격 사유: {failure_reason}"
-
-                st.session_state["eol_success_message"] = message
+            st.session_state["eol_result_message"] = {
+                "serial_no": selected_serial["serial_no"],
+                "result": result,
+                "forward_ok": forward_ok,
+                "reverse_ok": reverse_ok,
+                "forward_time_ms": int(forward_time_ms),
+                "reverse_time_ms": int(reverse_time_ms),
+                "max_current_ma": float(max_current_ma),
+                "position_error_deg": position_error_deg,
+                "failure_reason": failure_reason,
+            }
 
             st.rerun()
 
