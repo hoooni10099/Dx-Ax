@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from datetime import date
 
+import altair as alt
+import pandas as pd
 import streamlit as st
 
 from src.material_lot_service import (
@@ -10,6 +12,8 @@ from src.material_lot_service import (
     get_material_lots,
     get_status_changeable_material_lots,
     block_material_lot,
+    get_available_stock_by_material,
+    get_material_inventory_metrics,
 )
 
 from src.ui import (
@@ -18,6 +22,120 @@ from src.ui import (
     show_database_status,
     show_dataframe,
 )
+
+def show_inventory_summary():
+    """자재 재고 핵심 지표와 자재별 가용 재고 차트를 표시한다."""
+
+    metrics = get_material_inventory_metrics()
+    stock_df = get_available_stock_by_material()
+
+    show_inventory_metrics(metrics)
+    show_available_stock_chart(stock_df)
+
+def show_inventory_metrics(metrics: dict):
+    st.subheader("자재 재고 현황")
+
+    column1, column2, column3, column4 = st.columns(4)
+
+    column1.metric(
+        label="전체 가용 재고",
+        value=f"{metrics['available_stock_qty']:,}개",
+    )
+
+    column2.metric(
+        label="사용 가능 LOT",
+        value=f"{metrics['available_lot_count']:,}건",
+    )
+
+    column3.metric(
+        label="차단 LOT",
+        value=f"{metrics['blocked_lot_count']:,}건",
+    )
+
+    column4.metric(
+        label="소진 LOT",
+        value=f"{metrics['exhausted_lot_count']:,}건",
+    )
+
+def show_available_stock_chart(df: pd.DataFrame):
+    st.subheader("자재별 가용 재고")
+
+    if df.empty:
+        st.info("표시할 자재 재고가 없습니다.")
+        return
+
+    chart = (
+        alt.Chart(df)
+        .mark_bar(
+            color="#2563EB",
+            cornerRadiusEnd=4,
+        )
+        .encode(
+            x=alt.X(
+                "available_qty:Q",
+                title="가용 재고 수량",
+                axis=alt.Axis(tickMinStep=1),
+            ),
+            y=alt.Y(
+                "item_name:N",
+                title=None,
+                sort=alt.EncodingSortField(
+                    field="available_qty",
+                    order="descending",
+                ),
+            ),
+            tooltip=[
+                alt.Tooltip(
+                    "item_code:N",
+                    title="자재 코드",
+                ),
+                alt.Tooltip(
+                    "item_name:N",
+                    title="자재명",
+                ),
+                alt.Tooltip(
+                    "available_qty:Q",
+                    title="가용 재고",
+                    format=",d",
+                ),
+            ],
+        )
+        .properties(height=280)
+    )
+
+    text = (
+        alt.Chart(df)
+        .mark_text(
+            align="left",
+            baseline="middle",
+            dx=5,
+            color="#334155",
+        )
+        .encode(
+            x="available_qty:Q",
+            y=alt.Y(
+                "item_name:N",
+                sort=alt.EncodingSortField(
+                    field="available_qty",
+                    order="descending",
+                ),
+            ),
+            text=alt.Text(
+                "available_qty:Q",
+                format=",d",
+            ),
+        )
+    )
+
+    st.altair_chart(
+        chart + text,
+        width="stretch",
+    )
+
+    st.caption(
+        "가용 재고는 사용 가능한 LOT의 입고수량에서 "
+        "누적 투입수량을 제외한 값입니다."
+    )
 
 
 setup_page("자재 LOT 입고 관리")
@@ -40,6 +158,11 @@ register_tab, search_tab, status_tab = st.tabs(
 )
 
 with register_tab:
+
+    show_inventory_summary()
+    
+    st.divider()
+
     st.subheader("신규 자재 LOT 입고")
 
     materials = get_active_materials()
@@ -125,6 +248,7 @@ with search_tab:
         "사용 중지": "BLOCKED",
     }
 
+    
     with st.form("material_lot_search_form"):
         filter_col1, filter_col2 = st.columns(2)
 
@@ -302,3 +426,4 @@ with status_tab:
                 st.rerun()
             else:
                 st.error(result.message)
+
