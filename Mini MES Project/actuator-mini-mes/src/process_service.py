@@ -384,6 +384,23 @@ def register_process_result(
                     ),
                 )
 
+            for material_lot_id, _ in consumption_rows:
+                connection.execute(
+                    """
+                    UPDATE material_lot
+                    SET status = 'EXHAUSTED'
+                    WHERE material_lot_id = ?
+                        AND status = 'AVAILABLE'
+                        AND received_qty <= (
+                            SELECT COALESCE(SUM(mc.consumed_qty), 0)
+                            FROM material_consumption AS mc
+                            WHERE mc.material_lot_id =
+                                material_lot.material_lot_id
+                        )
+                    """,
+                    (material_lot_id,),
+                )
+
             connection.execute(
                 """
                 UPDATE work_order
