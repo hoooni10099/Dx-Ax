@@ -382,3 +382,117 @@ def get_status_changeable_material_lots() -> pd.DataFrame:
     with get_connection() as connection:
         return pd.read_sql_query(sql, connection)
 
+def get_material_inventory_metrics() -> dict:
+    """자재 LOT 페이지 상단의 핵심 재고 지표를 조회한다."""
+
+    sql = """
+        WITH lot_consumption AS (
+            SELECT
+                material_lot_id,
+                SUM(consumed_qty) AS consumed_qty
+            FROM material_consumption
+            GROUP BY material_lot_id
+        ),
+        lot_inventory AS (
+            SELECT
+                ml.material_lot_id,
+                ml.status,
+                MAX(
+                    ml.received_qty
+                    - COALESCE(lc.consumed_qty, 0),
+                    0
+                ) AS remaining_qty
+            FROM material_lot AS ml
+            LEFT JOIN lot_consumption AS lc
+              ON lc.material_lot_id = ml.material_lot_id
+        )
+        SELECT
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN status = 'AVAILABLE'
+                        THEN remaining_qty
+                        ELSE 0
+                    END
+                ),
+                0
+            ) AS available_stock_qty,
+            SUM(
+                CASE
+                    WHEN status = 'AVAILABLE' THEN 1
+                    ELSE 0
+                END
+            ) AS available_lot_count,
+            SUM(
+                CASE
+                    WHEN status = 'BLOCKED' THEN 1
+                    ELSE 0
+                END
+            ) AS blocked_lot_count,
+            SUM(
+                CASE
+                    WHEN status = 'EXHAUSTED' THEN 1
+                    ELSE 0
+                END
+            ) AS exhausted_lot_count
+        FROM lot_inventory
+    """
+
+    with get_connection() as connection:
+        row = connection.execute(sql).fetchone()
+
+    return {
+        "available_stock_qty": int(row["available_stock_qty"] or 0),
+        "available_lot_count": int(row["available_lot_count"] or 0),
+        "blocked_lot_count": int(row["blocked_lot_count"] or 0),
+        "exhausted_lot_count": int(row["exhausted_lot_count"] or 0),
+    }
+
+def get_available_stock_by_material() -> pd.DataFrame:
+    """AVAILABLE LOT의 잔여수량을 자재별로 집계한다."""
+
+    sql = """
+        WITH lot_consumption AS (
+            SELECT
+                material_lot_id,
+                SUM(consumed_qty) AS consumed_qty
+            FROM material_consumption
+            GROUP BY material_lot_id
+        ),
+        available_inventory AS (
+            SELECT
+                ml.material_item_id,
+                MAX(
+                    ml.received_qty
+                    - COALESCE(lc.consumed_qty, 0),
+                    0
+                ) AS remaining_qty
+            FROM material_lot AS ml
+            LEFT JOIN lot_consumption AS lc
+              ON lc.material_lot_id = ml.material_lot_id
+            WHERE ml.status = 'AVAILABLE'
+        )
+        SELECT
+            i.item_code,
+            i.item_name,
+            COALESCE(
+                SUM(ai.remaining_qty),
+                0
+            ) AS available_qty
+        FROM item AS i
+        LEFT JOIN available_inventory AS ai
+          ON ai.material_item_id = i.item_id
+        WHERE i.item_type = 'MATERIAL'
+          AND i.is_active = 1
+        GROUP BY
+            i.item_id,
+            i.item_code,
+            i.item_name
+        ORDER BY
+            available_qty ASC,
+            i.item_code ASC
+    """
+
+    with get_connection() as connection:
+        return pd.read_sql_query(sql, connection)
+
