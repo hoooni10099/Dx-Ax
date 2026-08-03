@@ -199,7 +199,7 @@ def create_material_lot(
                     status,
                     created_at
                 )
-                VALUES (?, ?, ?, ?, 'AVAILABLE', CURRENT_TIMESTAMP)
+                VALUES (?, ?, ?, ?, 'AVAILABLE', datetime('now', 'localtime'))
                 """,
                 (
                     lot_no,
