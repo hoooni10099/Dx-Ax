@@ -15,21 +15,6 @@ class ServiceResult:
     success: bool
     message: str
 
-def get_materials() -> pd.DataFrame:
-    sql = """
-        SELECT
-            item_id,
-            item_code,
-            item_name
-        FROM item
-        WHERE item_type = 'MATERIAL'
-          AND is_active = 1
-        ORDER BY item_code
-    """
-
-    with get_connection() as connection:
-        return pd.read_sql_query(sql, connection)
-
 def get_material_lots(
     material_item_id: int | None = None,
     status: str | None = None,
@@ -48,9 +33,11 @@ def get_material_lots(
             CASE material_lot.status
                 WHEN 'AVAILABLE' THEN '사용 가능'
                 WHEN 'EXHAUSTED' THEN '소진'
-                WHEN 'BLOCKED' THEN '사용 차단'
+                WHEN 'BLOCKED' THEN '사용 중지'
                 ELSE material_lot.status
             END AS "상태",
+            material_lot.blocked_reason AS "사용중지사유",
+            material_lot.blocked_at AS "사용중지일시",
             material_lot.created_at AS "등록일시"
         FROM material_lot
         JOIN item
@@ -71,8 +58,6 @@ def get_material_lots(
             AND material_lot.status = ?
         """
         params.append(status)
-
-    keyword = (keyword or "").strip()
 
     if keyword:
         sql += """
@@ -239,3 +224,161 @@ def get_active_materials() -> pd.DataFrame:
 
     with get_connection() as connection:
         return pd.read_sql_query(sql, connection)
+
+def block_material_lot(
+    material_lot_id: int,
+    blocked_reason: str,
+) -> ServiceResult:
+    """사용 가능한 자재 LOT을 사용 중지한다."""
+
+    try:
+        material_lot_id = int(material_lot_id)
+    except (TypeError, ValueError):
+        return ServiceResult(
+            success=False,
+            message="LOT 선택값이 올바르지 않습니다.",
+        )
+
+    if material_lot_id <= 0:
+        return ServiceResult(
+            success=False,
+            message="LOT 선택값이 올바르지 않습니다.",
+        )
+
+    blocked_reason = str(blocked_reason or "").strip()
+
+    if not blocked_reason:
+        return ServiceResult(
+            success=False,
+            message="사용 중지 사유를 입력해주세요.",
+        )
+
+    if len(blocked_reason) > 500:
+        return ServiceResult(
+            success=False,
+            message="사용 중지 사유는 500자 이하로 입력해주세요.",
+        )
+
+    try:
+        with get_connection() as connection:
+            lot = connection.execute(
+                """
+                SELECT
+                    ml.lot_no,
+                    ml.status,
+                    ml.received_qty
+                        - COALESCE(SUM(mc.consumed_qty), 0)
+                        AS remaining_qty
+                FROM material_lot AS ml
+                LEFT JOIN material_consumption AS mc
+                  ON mc.material_lot_id = ml.material_lot_id
+                WHERE ml.material_lot_id = ?
+                GROUP BY
+                    ml.material_lot_id,
+                    ml.lot_no,
+                    ml.status,
+                    ml.received_qty
+                """,
+                (material_lot_id,),
+            ).fetchone()
+
+            if lot is None:
+                return ServiceResult(
+                    success=False,
+                    message="선택한 자재 LOT을 찾을 수 없습니다.",
+                )
+
+            if lot["status"] == "BLOCKED":
+                return ServiceResult(
+                    success=False,
+                    message="이미 사용 중지된 LOT입니다.",
+                )
+
+            if lot["status"] == "EXHAUSTED":
+                return ServiceResult(
+                    success=False,
+                    message="소진된 LOT은 사용 중지할 수 없습니다.",
+                )
+
+            if lot["status"] != "AVAILABLE":
+                return ServiceResult(
+                    success=False,
+                    message="현재 상태에서는 LOT을 사용 중지할 수 없습니다.",
+                )
+
+            if lot["remaining_qty"] <= 0:
+                return ServiceResult(
+                    success=False,
+                    message="잔여 수량이 없는 LOT은 사용 중지할 수 없습니다.",
+                )
+
+            cursor = connection.execute(
+                """
+                UPDATE material_lot
+                SET
+                    status = 'BLOCKED',
+                    blocked_reason = ?,
+                    blocked_at = datetime('now', 'localtime')
+                WHERE material_lot_id = ?
+                  AND status = 'AVAILABLE'
+                """,
+                (
+                    blocked_reason,
+                    material_lot_id,
+                ),
+            )
+
+            if cursor.rowcount != 1:
+                return ServiceResult(
+                    success=False,
+                    message="LOT 상태가 변경되어 사용 중지하지 못했습니다.",
+                )
+
+            connection.commit()
+
+    except sqlite3.Error as error:
+        return ServiceResult(
+            success=False,
+            message=(
+                "LOT 사용 중지 처리 중 데이터베이스 오류가 "
+                f"발생했습니다: {error}"
+            ),
+        )
+
+    return ServiceResult(
+        success=True,
+        message=f"LOT {lot['lot_no']}을 사용 중지했습니다.",
+    )
+
+def get_status_changeable_material_lots() -> pd.DataFrame:
+    sql = """
+        SELECT
+            ml.material_lot_id,
+            ml.lot_no,
+            i.item_code,
+            i.item_name,
+            ml.status,
+            ml.received_qty
+                - COALESCE(SUM(mc.consumed_qty), 0)
+                AS remaining_qty
+        FROM material_lot AS ml
+        JOIN item AS i
+          ON i.item_id = ml.material_item_id
+        LEFT JOIN material_consumption AS mc
+          ON mc.material_lot_id = ml.material_lot_id
+        WHERE ml.status IN ('AVAILABLE')
+        GROUP BY
+            ml.material_lot_id,
+            ml.lot_no,
+            i.item_code,
+            i.item_name,
+            ml.status,
+            ml.received_qty
+        ORDER BY
+            ml.received_date DESC,
+            ml.lot_no
+    """
+
+    with get_connection() as connection:
+        return pd.read_sql_query(sql, connection)
+
