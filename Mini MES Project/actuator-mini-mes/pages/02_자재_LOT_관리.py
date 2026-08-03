@@ -158,11 +158,6 @@ register_tab, search_tab, status_tab = st.tabs(
 )
 
 with register_tab:
-
-    show_inventory_summary()
-    
-    st.divider()
-
     st.subheader("신규 자재 LOT 입고")
 
     materials = get_active_materials()
@@ -226,6 +221,11 @@ with register_tab:
                 st.error(result.message)
 
 with search_tab:
+    
+    show_inventory_summary()
+    
+    st.divider()
+    
     st.subheader("자재 LOT 입고 내역 조회")
 
     materials = get_active_materials()
@@ -426,4 +426,3 @@ with status_tab:
                 st.rerun()
             else:
                 st.error(result.message)
-
