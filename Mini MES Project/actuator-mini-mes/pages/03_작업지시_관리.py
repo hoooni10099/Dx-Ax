@@ -15,7 +15,6 @@ from src.work_order_service import (
 from src.ui import (
     page_title,
     setup_page,
-    show_database_status,
     show_dataframe,
 )
 
@@ -23,12 +22,7 @@ setup_page("작업지시 관리")
 
 page_title(
     title="작업지시 관리",
-    description="생산할 제품과 계획수량, 납기일을 지정하여 작업지시를 등록합니다.",
-    tables="work_order, item",
-    task="신규 작업지시를 생성하고 등록 결과를 확인합니다.",
 )
-
-show_database_status()
 
 register_tab, search_tab, serial_tab = st.tabs(
     [
