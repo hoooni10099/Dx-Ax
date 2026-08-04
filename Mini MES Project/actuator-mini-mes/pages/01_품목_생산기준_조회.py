@@ -17,15 +17,15 @@ from src.ui import (
 PAGE_TITLE = "품목, 생산기준 조회"
 
 ITEM_TYPE_OPTIONS = {
-    "전체" : None,
-    "제품" : "PRODUCT",
-    "자재" : "MATERIAL",
+    "전체": None,
+    "제품": "PRODUCT",
+    "자재": "MATERIAL",
 }
 
 ACTIVE_STATUS_OPTIONS = {
-    "전체" : None,
-    "사용" : 1,
-    "미사용" : 0,
+    "전체": None,
+    "사용": 1,
+    "미사용": 0,
 }
 
 setup_page(PAGE_TITLE)
