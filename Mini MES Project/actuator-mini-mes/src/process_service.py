@@ -1077,3 +1077,4 @@ def _complete_work_order_if_finished(
     )
 
     return cursor.rowcount == 1
+
