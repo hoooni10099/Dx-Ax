@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import altair as alt
+import pandas as pd
 import streamlit as st
 
 from src.process_service import (
@@ -10,6 +12,447 @@ from src.process_service import (
 )
 
 from src.ui import page_title, setup_page
+
+from src.eol_service import (
+    get_eol_current_trend,
+    get_eol_operation_time_distribution,
+    get_eol_result_summary,)
+
+def show_eol_current_trend_chart(
+    current_df: pd.DataFrame,
+    current_limit_ma: float,
+):
+    """EOL 최대전류 추이와 허용 기준선을 표시한다."""
+
+    st.subheader("최대전류 추이")
+
+    if current_df.empty:
+        st.info("표시할 EOL 검사 결과가 없습니다.")
+        return
+
+    chart_df = current_df.copy()
+
+    chart_df["tested_at"] = pd.to_datetime(
+        chart_df["tested_at"],
+        errors="coerce",
+    )
+
+    chart_df["limit_status"] = chart_df["max_current_ma"].apply(
+        lambda value: (
+            "기준 초과"
+            if value > current_limit_ma
+            else "기준 이내"
+        )
+    )
+
+    current_line = (
+        alt.Chart(chart_df)
+        .mark_line(
+            color="#2563EB",
+            strokeWidth=2,
+        )
+        .encode(
+            x=alt.X(
+                "tested_at:T",
+                title="검사 일시",
+            ),
+            y=alt.Y(
+                "max_current_ma:Q",
+                title="최대전류 (mA)",
+                scale=alt.Scale(zero=False),
+            ),
+            order=alt.Order("eol_test_result_id:Q"),
+        )
+    )
+
+    current_points = (
+        alt.Chart(chart_df)
+        .mark_point(
+            size=100,
+            filled=True,
+        )
+        .encode(
+            x=alt.X("tested_at:T"),
+            y=alt.Y("max_current_ma:Q"),
+            color=alt.Color(
+                "limit_status:N",
+                title="기준 판정",
+                scale=alt.Scale(
+                    domain=["기준 이내", "기준 초과"],
+                    range=["#2563EB", "#DC2626"],
+                ),
+            ),
+            tooltip=[
+                alt.Tooltip(
+                    "tested_at:T",
+                    title="검사 일시",
+                    format="%Y-%m-%d %H:%M:%S",
+                ),
+                alt.Tooltip(
+                    "serial_no:N",
+                    title="Serial Number",
+                ),
+                alt.Tooltip(
+                    "product_code:N",
+                    title="제품",
+                ),
+                alt.Tooltip(
+                    "work_order_no:N",
+                    title="작업지시",
+                ),
+                alt.Tooltip(
+                    "max_current_ma:Q",
+                    title="최대전류",
+                    format=".1f",
+                ),
+                alt.Tooltip(
+                    "limit_status:N",
+                    title="기준 판정",
+                ),
+                alt.Tooltip(
+                    "result:N",
+                    title="EOL 결과",
+                ),
+            ],
+        )
+    )
+
+    limit_line = (
+        alt.Chart(
+            pd.DataFrame(
+                {"current_limit_ma": [current_limit_ma]}
+            )
+        )
+        .mark_rule(
+            color="#DC2626",
+            strokeDash=[6, 4],
+            strokeWidth=2,
+        )
+        .encode(
+            y=alt.Y("current_limit_ma:Q"),
+            tooltip=[
+                alt.Tooltip(
+                    "current_limit_ma:Q",
+                    title="허용 기준",
+                    format=".1f",
+                )
+            ],
+        )
+    )
+
+    chart = (
+        current_line
+        + current_points
+        + limit_line
+    ).properties(
+        height=380,
+    ).interactive()
+
+    st.altair_chart(
+        chart,
+        width="stretch",
+    )
+
+    over_limit_count = int(
+        (chart_df["max_current_ma"] > current_limit_ma).sum()
+    )
+
+    st.caption(
+        f"임시 허용 기준: {current_limit_ma:,.1f}mA · "
+        f"기준 초과: {over_limit_count:,}건"
+    )
+
+def show_eol_current_monitoring():
+    """EOL 최대전류 모니터링 영역을 표시한다."""
+
+    all_df = get_eol_current_trend()
+
+    st.subheader("EOL 전류 모니터링")
+
+    if all_df.empty:
+        st.info("등록된 EOL 검사 결과가 없습니다.")
+        return
+
+    product_options = (
+        all_df[["product_item_id", "product_code", "product_name"]]
+        .drop_duplicates()
+        .sort_values("product_code")
+    )
+
+    product_labels = {
+        int(row["product_item_id"]): (
+            f"{row['product_code']} - {row['product_name']}"
+        )
+        for _, row in product_options.iterrows()
+    }
+
+    filter_column, limit_column = st.columns(2)
+
+    with filter_column:
+        selected_product_id = st.selectbox(
+            "제품",
+            options=list(product_labels),
+            format_func=lambda item_id: product_labels[item_id],
+        )
+
+    with limit_column:
+        current_limit_ma = st.number_input(
+            "최대 허용 전류 (mA)",
+            min_value=0.0,
+            value=1500.0,
+            step=10.0,
+            help="현재는 임시 분석 기준이며 DB에 저장되지 않습니다.",
+        )
+
+    filtered_df = get_eol_current_trend(
+        product_item_id=selected_product_id,
+    )
+
+    show_eol_current_trend_chart(
+        current_df=filtered_df,
+        current_limit_ma=current_limit_ma,
+    )
+
+def reshape_operation_time_data(
+    operation_time_df: pd.DataFrame,
+) -> pd.DataFrame:
+    """정·역방향 동작시간 컬럼을 박스플롯용 긴 형태로 변환한다."""
+
+    if operation_time_df.empty:
+        return pd.DataFrame()
+
+    long_df = operation_time_df.melt(
+        id_vars=[
+            "eol_test_result_id",
+            "tested_at",
+            "result",
+            "serial_no",
+            "work_order_id",
+            "work_order_no",
+            "product_item_id",
+            "product_code",
+            "product_name",
+        ],
+        value_vars=[
+            "forward_time_ms",
+            "reverse_time_ms",
+        ],
+        var_name="direction_code",
+        value_name="operation_time_ms",
+    )
+
+    long_df["direction"] = long_df["direction_code"].map(
+        {
+            "forward_time_ms": "정방향",
+            "reverse_time_ms": "역방향",
+        }
+    )
+
+    return long_df
+
+def show_eol_operation_time_boxplot(
+    operation_time_df: pd.DataFrame,
+):
+    """정·역방향 동작시간 분포를 박스플롯으로 표시한다."""
+
+    st.subheader("정·역방향 동작시간 분포")
+
+    if operation_time_df.empty:
+        st.info("표시할 EOL 동작시간 데이터가 없습니다.")
+        return
+
+    chart_df = reshape_operation_time_data(operation_time_df)
+
+    chart_df["tested_at"] = pd.to_datetime(
+        chart_df["tested_at"],
+        errors="coerce",
+    )
+
+    boxplot = (
+        alt.Chart(chart_df)
+        .mark_boxplot(
+            extent=1.5,
+            size=70,
+        )
+        .encode(
+            x=alt.X(
+                "direction:N",
+                title=None,
+                sort=["정방향", "역방향"],
+            ),
+            y=alt.Y(
+                "operation_time_ms:Q",
+                title="동작시간 (ms)",
+                scale=alt.Scale(zero=False),
+            ),
+            color=alt.Color(
+                "direction:N",
+                title="동작 방향",
+                scale=alt.Scale(
+                    domain=["정방향", "역방향"],
+                    range=["#2563EB", "#F59E0B"],
+                ),
+                legend=None,
+            ),
+            tooltip=[
+                alt.Tooltip(
+                    "direction:N",
+                    title="동작 방향",
+                ),
+                alt.Tooltip(
+                    "operation_time_ms:Q",
+                    title="동작시간",
+                    format=",d",
+                ),
+            ],
+        )
+        .properties(
+            height=380,
+        )
+    )
+
+    st.altair_chart(
+        boxplot,
+        width="stretch",
+    )
+
+    forward_mean = chart_df.loc[
+        chart_df["direction"] == "정방향",
+        "operation_time_ms",
+    ].mean()
+
+    reverse_mean = chart_df.loc[
+        chart_df["direction"] == "역방향",
+        "operation_time_ms",
+    ].mean()
+
+    st.caption(
+        f"정방향 평균: {forward_mean:,.1f}ms · "
+        f"역방향 평균: {reverse_mean:,.1f}ms · "
+        f"검사 표본: {len(operation_time_df):,}건"
+    )
+
+def show_eol_result_summary(
+    product_item_id: int,
+):
+    """선택한 제품의 EOL 검사 결과 요약을 표시한다."""
+
+    summary_df = get_eol_result_summary(
+        product_item_id=product_item_id,
+    )
+
+    summary = summary_df.iloc[0]
+
+    total_count = int(summary["total_count"])
+    pass_count = int(summary["pass_count"])
+    fail_count = int(summary["fail_count"])
+
+    pass_rate = (
+        pass_count / total_count * 100
+        if total_count > 0
+        else 0.0
+    )
+
+    st.subheader("검사 결과 요약")
+
+    total_column, pass_column, fail_column, rate_column = (
+        st.columns(4)
+    )
+
+    total_column.metric(
+        "전체 검사",
+        f"{total_count:,}건",
+    )
+
+    pass_column.metric(
+        "합격",
+        f"{pass_count:,}건",
+    )
+
+    fail_column.metric(
+        "불합격",
+        f"{fail_count:,}건",
+    )
+
+    rate_column.metric(
+        "합격률",
+        f"{pass_rate:.1f}%",
+    )
+
+def show_eol_monitoring():
+    """EOL 전류 및 동작시간 모니터링 영역을 표시한다."""
+
+    all_df = get_eol_current_trend()
+
+    st.subheader("EOL 품질 모니터링")
+
+    if all_df.empty:
+        st.info("등록된 EOL 검사 결과가 없습니다.")
+        return
+
+    product_options = (
+        all_df[
+            [
+                "product_item_id",
+                "product_code",
+                "product_name",
+            ]
+        ]
+        .drop_duplicates()
+        .sort_values("product_code")
+    )
+
+    product_labels = {
+        int(row["product_item_id"]): (
+            f"{row['product_code']} - {row['product_name']}"
+        )
+        for _, row in product_options.iterrows()
+    }
+
+    filter_column, limit_column = st.columns(2)
+
+    with filter_column:
+        selected_product_id = st.selectbox(
+            "제품",
+            options=list(product_labels),
+            format_func=lambda item_id: product_labels[item_id],
+        )
+
+    with limit_column:
+        current_limit_ma = st.number_input(
+            "최대 허용 전류 (mA)",
+            min_value=0.0,
+            value=1500.0,
+            step=10.0,
+            help="현재는 임시 분석 기준이며 DB에 저장되지 않습니다.",
+        )
+
+    show_eol_result_summary(
+        product_item_id=selected_product_id,
+    )
+
+    st.divider()
+
+    # 같은 제품의 동작시간 데이터 조회
+    operation_time_df = get_eol_operation_time_distribution(
+        product_item_id=selected_product_id,
+    )
+
+    show_eol_operation_time_boxplot(
+        operation_time_df=operation_time_df,
+    )
+
+    st.divider()
+
+    # 선택한 제품의 최대전류 데이터 조회
+    current_df = get_eol_current_trend(
+        product_item_id=selected_product_id,
+    )
+
+    show_eol_current_trend_chart(
+        current_df=current_df,
+        current_limit_ma=current_limit_ma,
+    )
 
 
 setup_page("EOL 검사 및 생산 완료")
@@ -260,6 +703,10 @@ else:
 
 st.divider()
 
+show_eol_monitoring()
+
+st.divider()
+
 st.subheader("2. 생산 완료 처리")
 
 if "completion_success_message" in st.session_state:
@@ -353,3 +800,4 @@ else:
             st.error(
                 f"생산 완료 처리 중 오류가 발생했습니다: {error}"
             )
+
