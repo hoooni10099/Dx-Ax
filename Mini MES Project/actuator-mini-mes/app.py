@@ -413,7 +413,7 @@ st.markdown(
 )
 
 st.markdown(
-    '<div class = "main-title"> 🏭Actuator Mini MES</div>',
+    '<div class = "main-title"> Actuator Mini MES</div>',
     unsafe_allow_html = True,
 )
 
@@ -451,7 +451,7 @@ with column1:
     st.markdown(
         """
         <div class="feature-card">
-            <h4>📦 생산 준비</h4>
+            <h4>생산 준비</h4>
             <p>
                 품목·BOM·공정 기준정보를 확인하고,
                 생산에 필요한 자재 LOT와 작업지시를 등록합니다.
@@ -465,7 +465,7 @@ with column2:
     st.markdown(
         """
         <div class="feature-card">
-            <h4>⚙️ 생산 실행</h4>
+            <h4>생산 실행</h4>
             <p>
                 완제품 Serial을 발급하고 공정 순서에 따라
                 작업실적과 자재 투입 이력을 등록합니다.
@@ -479,7 +479,7 @@ with column3:
     st.markdown(
         """
         <div class="feature-card">
-            <h4>🔍 검사 및 추적</h4>
+            <h4>검사 및 추적</h4>
             <p>
                 EOL 검사와 생산 완료 처리를 수행하고
                 Serial과 자재 LOT를 양방향으로 추적합니다.
@@ -532,3 +532,9 @@ st.title("Mini MES 대시보드")
 st.caption("작업지시, 공정 진행 및 생산실적을 확인합니다.")
 
 show_dashboard_charts()
+
+print("자재 재고 핵심 지표")
+print(get_material_inventory_metrics())
+
+print("\n자재별 가용 재고")
+print(get_available_stock_by_material())
