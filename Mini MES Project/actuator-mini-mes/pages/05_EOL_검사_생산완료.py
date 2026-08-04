@@ -8,6 +8,7 @@ from src.process_service import (
     get_eol_ready_serials,
     register_eol_test_result,
 )
+
 from src.ui import page_title, setup_page
 
 
