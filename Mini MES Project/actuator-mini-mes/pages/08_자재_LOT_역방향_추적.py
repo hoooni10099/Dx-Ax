@@ -7,25 +7,14 @@ from src.traceability_service import (
     get_material_lot_options,
     get_material_lot_summary,
 )
-from src.ui import page_title, setup_page, show_database_status
+from src.ui import page_title, setup_page
 
 
 setup_page("LOT 추적")
 
 page_title(
     title="LOT 역방향 추적",
-    description=(
-        "자재 LOT를 기준으로 자재 기본정보와 수량 현황을 확인하고, "
-        "해당 LOT가 투입된 완제품 Serial을 조회합니다."
-    ),
-    tables=(
-        "material_lot, material_consumption, item, "
-        "product_serial, work_order, routing_step, process"
-    ),
-    task="자재 LOT를 선택하고 해당 자재가 사용된 완제품을 확인합니다.",
 )
-
-show_database_status()
 
 st.divider()
 
