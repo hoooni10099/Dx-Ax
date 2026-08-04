@@ -430,7 +430,9 @@ def issue_product_serials(
         ),
     )
 
-def get_product_serials() -> pd.DataFrame:
+def get_product_serials(
+    keyword: str | None = None,
+) -> pd.DataFrame:
     """발급된 제품 Serial과 작업지시 정보를 조회한다."""
 
     sql = """
@@ -449,6 +451,37 @@ def get_product_serials() -> pd.DataFrame:
           ON wo.work_order_id = ps.work_order_id
         JOIN item AS i
           ON i.item_id = wo.product_item_id
+    """
+
+    params: list[object] = []
+
+    normalized_keyword = (
+        keyword.strip()
+        if keyword
+        else ""
+    )
+
+    if normalized_keyword:
+        sql += """
+            WHERE
+                ps.serial_no LIKE ?
+                OR wo.work_order_no LIKE ?
+                OR i.item_code LIKE ?
+                OR i.item_name LIKE ?
+        """
+
+        keyword_pattern = f"%{normalized_keyword}%"
+
+        params.extend(
+            [
+                keyword_pattern,
+                keyword_pattern,
+                keyword_pattern,
+                keyword_pattern,
+            ]
+        )
+
+    sql += """
         ORDER BY
             ps.created_at DESC,
             ps.product_serial_id DESC
@@ -462,7 +495,11 @@ def get_product_serials() -> pd.DataFrame:
     }
 
     with get_connection() as connection:
-        serials = pd.read_sql_query(sql, connection)
+        serials = pd.read_sql_query(
+            sql,
+            connection,
+            params=params,
+        )
 
     if serials.empty:
         return pd.DataFrame(
@@ -484,15 +521,19 @@ def get_product_serials() -> pd.DataFrame:
         .fillna(serials["status"])
     )
 
-    return serials.rename(
-        columns={
-            "serial_no": "Serial Number",
-            "work_order_no": "작업지시번호",
-            "item_code": "제품코드",
-            "item_name": "제품명",
-            "status": "상태",
-            "started_at": "시작일시",
-            "completed_at": "완료일시",
-            "created_at": "발급일시",
-        }
-    ).drop(columns=["product_serial_id"])
+    return (
+        serials.rename(
+            columns={
+                "serial_no": "Serial Number",
+                "work_order_no": "작업지시번호",
+                "item_code": "제품코드",
+                "item_name": "제품명",
+                "status": "상태",
+                "started_at": "시작일시",
+                "completed_at": "완료일시",
+                "created_at": "발급일시",
+            }
+        )
+        .drop(columns=["product_serial_id"])
+    )
+
