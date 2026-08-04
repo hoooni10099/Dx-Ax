@@ -11,7 +11,6 @@ from src.master_data_service import (
 from src.ui import (
     page_title,
     setup_page,
-    show_database_status,
     show_dataframe,
 )
 
@@ -32,13 +31,8 @@ ACTIVE_STATUS_OPTIONS = {
 setup_page(PAGE_TITLE)
 
 page_title(
-    title = PAGE_TITLE,
-    description = "품목, BOM, 제품별 공정순서로 구성된 생산 기준정보를 조회합니다.",
-    tables = "item, bom, routing_step, process",
-    task = "조회 조건을 선택하여 등록된 생산 기준정보를 확인합니다.",
+    title = PAGE_TITLE
 )
-
-show_database_status()
 
 item_tab, bom_tab, routing_tab = st.tabs(
     [
