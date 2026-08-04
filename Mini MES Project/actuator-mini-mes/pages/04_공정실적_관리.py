@@ -12,7 +12,6 @@ from src.process_service import (
 from src.ui import (
     page_title,
     setup_page,
-    show_database_status,
 )
 
 
@@ -20,12 +19,7 @@ setup_page("공정실적 관리")
 
 page_title(
     title="공정실적 관리",
-    description="제품 Serial별 다음 공정을 확인하고 공정 실적과 자재 소비 이력을 등록합니다.",
-    tables="product_serial, routing_step, process_history, material_lot, material_consumption",
-    task="Serial과 자재 LOT를 선택한 후 공정 실적을 등록합니다.",
 )
-
-show_database_status()
 
 st.divider()
 st.subheader("공정 투입 대상 선택")
