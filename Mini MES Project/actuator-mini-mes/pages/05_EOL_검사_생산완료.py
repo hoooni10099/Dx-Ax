@@ -8,25 +8,14 @@ from src.process_service import (
     get_eol_ready_serials,
     register_eol_test_result,
 )
-from src.ui import page_title, setup_page, show_database_status
+from src.ui import page_title, setup_page
 
 
 setup_page("EOL 검사 및 생산 완료")
 
 page_title(
     title="EOL 검사 및 생산 완료",
-    description=(
-        "일반 공정을 모두 통과한 제품의 EOL 검사 결과를 등록하고, "
-        "검사를 통과한 제품의 생산을 완료합니다."
-    ),
-    tables=(
-        "product_serial, work_order, routing_step, process_history, "
-        "eol_test_result"
-    ),
-    task="EOL 검사 결과 등록 및 최종 생산 완료 처리",
 )
-
-show_database_status()
 
 st.subheader("1. EOL 검사 결과 등록")
 eol_result_message = st.session_state.get(
