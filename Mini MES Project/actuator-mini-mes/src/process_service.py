@@ -1078,3 +1078,31 @@ def _complete_work_order_if_finished(
 
     return cursor.rowcount == 1
 
+def get_history_serials() -> pd.DataFrame:
+    """공정 및 자재 소비 이력을 조회할 전체 제품 Serial 목록을 반환한다."""
+
+    sql = """
+        SELECT
+            ps.product_serial_id,
+            ps.serial_no,
+            ps.status AS serial_status,
+            wo.work_order_no,
+            i.item_code,
+            i.item_name,
+            ps.created_at
+        FROM product_serial AS ps
+        JOIN work_order AS wo
+          ON wo.work_order_id = ps.work_order_id
+        JOIN item AS i
+          ON i.item_id = wo.product_item_id
+        ORDER BY
+            ps.created_at DESC,
+            ps.product_serial_id DESC
+    """
+
+    with get_connection() as connection:
+        return pd.read_sql_query(
+            sql,
+            connection,
+        )
+
