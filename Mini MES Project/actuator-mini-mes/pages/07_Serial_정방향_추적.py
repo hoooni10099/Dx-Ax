@@ -9,27 +9,14 @@ from src.traceability_service import (
     get_serial_process_history,
     get_serial_summary,
 )
-from src.ui import page_title, setup_page, show_database_status
+from src.ui import page_title, setup_page
 
 
 setup_page("Serial 추적")
 
 page_title(
     title="Serial 정방향 추적",
-    description=(
-        "완제품 Serial을 기준으로 작업지시, 공정 이력, "
-        "실제 투입된 자재 LOT와 EOL 검사 결과를 조회합니다."
-    ),
-    tables=(
-        "product_serial, work_order, item, "
-        "material_consumption, material_lot, "
-        "routing_step, process, process_history, "
-        "eol_test_result"
-    ),
-    task="Serial을 선택하고 전체 생산 이력을 확인합니다.",
 )
-
-show_database_status()
 
 st.divider()
 
