@@ -7,19 +7,14 @@ from src.production_status_service import (
     get_serial_process_status,
     get_serial_status,
 )
-from src.ui import page_title, setup_page, show_database_status
+from src.ui import page_title, setup_page
 
 
 setup_page("생산 진행 현황")
 
 page_title(
     title="생산 진행 현황",
-    description="작업지시별 생산 수량과 진행률을 조회합니다.",
-    tables="work_order, product_serial, item",
-    task="작업지시별 계획·진행·완료 수량을 확인합니다.",
 )
-
-show_database_status()
 
 st.divider()
 
