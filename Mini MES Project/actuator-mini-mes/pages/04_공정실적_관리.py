@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import streamlit as st
+import altair as alt
+import pandas as pd
 
 from src.process_service import (
     get_process_ready_serials,
@@ -9,10 +11,135 @@ from src.process_service import (
     get_serial_process_history,
     register_process_result,
 )
+
+from src.process_history_service import (
+    get_process_performance_metrics,
+    get_process_result_summary,
+)
+
 from src.ui import (
     page_title,
     setup_page,
 )
+
+def show_process_performance_metrics(metrics: dict):
+    """공정실적 핵심 지표를 표시한다."""
+
+    st.subheader("공정실적 현황")
+
+    column1, column2, column3, column4 = st.columns(4)
+
+    column1.metric(
+        label="전체 공정실적",
+        value=f"{metrics['total_history_count']:,}건",
+    )
+
+    column2.metric(
+        label="합격",
+        value=f"{metrics['pass_count']:,}건",
+    )
+
+    column3.metric(
+        label="불합격",
+        value=f"{metrics['fail_count']:,}건",
+    )
+
+    column4.metric(
+        label="공정 완료율",
+        value=f"{metrics['completion_rate']:.1f}%",
+        help=(
+            f"완료 필수 공정 {metrics['completed_process_count']:,}건 / "
+            f"전체 예정 필수 공정 {metrics['expected_process_count']:,}건"
+        ),
+    )
+
+def show_process_result_chart(df: pd.DataFrame):
+    """공정별 합격·불합격 수량을 누적 가로 막대로 표시한다."""
+
+    st.subheader("공정별 합격·불합격 수량")
+
+    if df.empty:
+        st.info("표시할 공정실적이 없습니다.")
+        return
+
+    process_order = (
+        df[["process_name", "sequence_no"]]
+        .drop_duplicates()
+        .sort_values(
+            by=["sequence_no", "process_name"],
+            ascending=[True, True],
+        )["process_name"]
+        .tolist()
+    )
+
+    chart = (
+        alt.Chart(df)
+        .mark_bar(cornerRadiusEnd=3)
+        .encode(
+            x=alt.X(
+                "result_qty:Q",
+                title="실적 수량",
+                axis=alt.Axis(tickMinStep=1),
+                stack="zero",
+            ),
+            y=alt.Y(
+                "process_name:N",
+                title=None,
+                sort=process_order,
+            ),
+            color=alt.Color(
+                "result_name:N",
+                title="판정 결과",
+                scale=alt.Scale(
+                    domain=["합격", "불합격"],
+                    range=["#16A34A", "#DC2626"],
+                ),
+            ),
+            order=alt.Order(
+                "result:N",
+                sort="descending",
+            ),
+            tooltip=[
+                alt.Tooltip(
+                    "process_code:N",
+                    title="공정 코드",
+                ),
+                alt.Tooltip(
+                    "process_name:N",
+                    title="공정명",
+                ),
+                alt.Tooltip(
+                    "sequence_no:Q",
+                    title="공정 순서",
+                    format="d",
+                ),
+                alt.Tooltip(
+                    "result_name:N",
+                    title="판정",
+                ),
+                alt.Tooltip(
+                    "result_qty:Q",
+                    title="수량",
+                    format=",d",
+                ),
+            ],
+        )
+        .properties(height=320)
+    )
+
+    st.altair_chart(
+        chart,
+        width="stretch",
+    )
+
+def show_process_performance_summary():
+    """공정실적 핵심 지표와 결과 차트를 표시한다."""
+
+    metrics = get_process_performance_metrics()
+    result_df = get_process_result_summary()
+
+    show_process_performance_metrics(metrics)
+    show_process_result_chart(result_df)
 
 
 setup_page("공정실적 관리")
@@ -22,6 +149,11 @@ page_title(
 )
 
 st.divider()
+
+show_process_performance_summary()
+
+st.divider()
+
 st.subheader("공정 투입 대상 선택")
 
 if "process_success_message" in st.session_state:
@@ -92,6 +224,7 @@ required_lots = get_required_material_lots(
 )
 
 st.divider()
+
 st.subheader("투입 자재 LOT 선택")
 
 
@@ -255,3 +388,4 @@ with history_col2:
             use_container_width=True,
             hide_index=True,
         )
+
