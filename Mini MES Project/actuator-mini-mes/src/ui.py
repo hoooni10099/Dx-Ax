@@ -17,21 +17,8 @@ def setup_page (title: str) -> None:
 # 페이지 제목과 학습 안내 표시
 def page_title (
         title : str,
-        description : str,
-        tables : str,
-        task : str,
 ) -> None:
     st.title(title)
-
-    st.info (
-        f"""
-        이 화면에서 배우는 내용 : {description}
-
-        관련 테이블 {tables}
-
-        수행할 작업 : {task}
-        """
-    )
 
 # 현재 DB 파일 존재 여부 표시
 def show_database_status() -> None:
