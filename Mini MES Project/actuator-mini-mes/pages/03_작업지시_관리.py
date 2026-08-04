@@ -24,6 +24,18 @@ page_title(
     title="작업지시 관리",
 )
 
+products = get_active_products()
+
+product_options = {
+    f"{row.item_code} - {row.item_name}": row.item_id
+    for row in products.itertuples(index=False)
+}
+
+search_product_options = {
+    "전체 제품": None,
+    **product_options,
+}
+
 register_tab, search_tab, serial_tab = st.tabs(
     [
         "작업지시 등록",
@@ -36,20 +48,22 @@ register_tab, search_tab, serial_tab = st.tabs(
 with register_tab:
     st.subheader("신규 작업지시 등록")
 
-    products = get_active_products()
+    if "work_order_success_message" in st.session_state:
+        st.success(
+            st.session_state.pop(
+                "work_order_success_message"
+            )
+        )
 
     if products.empty:
-        st.warning("작업지시를 생성할 수 있는 활성 완제품이 없습니다.")
+        st.warning(
+            "작업지시를 생성할 수 있는 활성 완제품이 없습니다."
+        )
 
     else:
-        product_options = {
-            f"{row['item_code']} - {row['item_name']}": row["item_id"]
-            for row in products.to_dict(orient="records")
-        }
-
         with st.form(
             "work_order_register_form",
-            clear_on_submit=False,
+            clear_on_submit=True,
         ):
             work_order_no = st.text_input(
                 "작업지시 번호",
@@ -92,26 +106,17 @@ with register_tab:
             )
 
             if result.success:
-                st.success(result.message)
+                st.session_state[
+                    "work_order_success_message"
+                ] = result.message
+
+                st.rerun()
             else:
                 st.error(result.message)
 
 
 with search_tab:
     st.subheader("작업지시 조회")
-
-    products = get_active_products()
-
-    search_product_options = {
-        "전체 제품": None,
-    }
-
-    search_product_options.update(
-        {
-            f"{row['item_code']} - {row['item_name']}": row["item_id"]
-            for row in products.to_dict(orient="records")
-        }
-    )
 
     status_options = {
         "전체 상태": None,
@@ -144,7 +149,7 @@ with search_tab:
             key="work_order_search_keyword",
         )
 
-        search_submitted = st.form_submit_button(
+        st.form_submit_button(
             "조회",
             type="primary",
         )
@@ -286,31 +291,9 @@ with serial_tab:
         key="serial_search_keyword",
     )
 
-    product_serials = get_product_serials()
-
-    if serial_keyword.strip() and not product_serials.empty:
-        normalized_keyword = serial_keyword.strip().lower()
-
-        search_columns = [
-            "Serial Number",
-            "작업지시번호",
-            "제품코드",
-            "제품명",
-        ]
-
-        search_mask = product_serials[search_columns].apply(
-            lambda column: (
-                column.astype(str)
-                .str.lower()
-                .str.contains(
-                    normalized_keyword,
-                    regex=False,
-                    na=False,
-                )
-            )
-        ).any(axis=1)
-
-        product_serials = product_serials[search_mask]
+    product_serials = get_product_serials(
+        keyword=serial_keyword,
+    )
 
     st.metric(
         "조회된 Serial",
