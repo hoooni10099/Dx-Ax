@@ -9,7 +9,18 @@ def get_process_performance_metrics() -> dict:
     """공정실적 페이지 상단 핵심 지표를 조회한다."""
 
     sql = """
-        WITH expected_process AS (
+        WITH first_failed_sequence AS (
+            SELECT
+                ph.product_serial_id,
+                MIN(rs.sequence_no) AS failed_sequence_no
+            FROM process_history AS ph
+            JOIN routing_step AS rs
+              ON rs.routing_step_id = ph.routing_step_id
+            WHERE ph.result = 'FAIL'
+            GROUP BY
+                ph.product_serial_id
+        ),
+        expected_process AS (
             SELECT
                 ps.product_serial_id,
                 rs.routing_step_id
@@ -20,6 +31,10 @@ def get_process_performance_metrics() -> dict:
               ON rs.product_item_id = wo.product_item_id
              AND rs.is_active = 1
              AND rs.is_required = 1
+            LEFT JOIN first_failed_sequence AS ffs
+              ON ffs.product_serial_id = ps.product_serial_id
+            WHERE ffs.failed_sequence_no IS NULL
+               OR rs.sequence_no <= ffs.failed_sequence_no
         ),
         required_performance AS (
             SELECT
@@ -79,7 +94,9 @@ def get_process_performance_metrics() -> dict:
     )
 
     return {
-        "total_history_count": int(row["total_history_count"] or 0),
+        "total_history_count": int(
+            row["total_history_count"] or 0
+        ),
         "pass_count": int(row["pass_count"] or 0),
         "fail_count": int(row["fail_count"] or 0),
         "expected_process_count": expected_count,
