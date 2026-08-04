@@ -19,7 +19,6 @@ from src.material_lot_service import (
 from src.ui import (
     page_title,
     setup_page,
-    show_database_status,
     show_dataframe,
 )
 
@@ -142,12 +141,7 @@ setup_page("자재 LOT 입고 관리")
 
 page_title(
     title="자재 LOT 입고 관리",
-    description="입고된 자재를 LOT 단위로 등록하고 조회합니다.",
-    tables="item, material_lot",
-    task="자재와 입고 정보를 입력하여 신규 자재 LOT을 등록합니다.",
 )
-
-show_database_status()
 
 register_tab, search_tab, status_tab = st.tabs(
     [
@@ -158,6 +152,11 @@ register_tab, search_tab, status_tab = st.tabs(
 )
 
 with register_tab:
+
+    show_inventory_summary()
+    
+    st.divider()
+
     st.subheader("신규 자재 LOT 입고")
 
     materials = get_active_materials()
@@ -221,11 +220,6 @@ with register_tab:
                 st.error(result.message)
 
 with search_tab:
-    
-    show_inventory_summary()
-    
-    st.divider()
-    
     st.subheader("자재 LOT 입고 내역 조회")
 
     materials = get_active_materials()
@@ -426,3 +420,4 @@ with status_tab:
                 st.rerun()
             else:
                 st.error(result.message)
+
