@@ -326,15 +326,6 @@ with status_tab:
             st.session_state.pop("lot_status_success_message")
         )
 
-    st.info(
-        """
-        품질 이상이나 공급업체 확인 등의 이유로
-        생산에 투입하면 안 되는 LOT을 사용 중지합니다.
-
-        사용 중지된 LOT은 이 화면에서 바로 해제할 수 없습니다.
-        """
-    )
-
     changeable_lots = get_status_changeable_material_lots()
 
     if changeable_lots.empty:
