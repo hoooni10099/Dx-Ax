@@ -818,7 +818,7 @@ else:
         key="complete_product_button",
     ):
         try:
-            service_result = complete_product(
+            complete_product(
                 product_serial_id=int(
                     selected_completion_serial[
                         "product_serial_id"
@@ -831,6 +831,9 @@ else:
                 ),
             )
 
+        except ValueError as error:
+            st.error(str(error))
+
         except Exception as error:
             st.error(
                 "생산 완료 처리 중 오류가 발생했습니다. "
@@ -839,13 +842,10 @@ else:
             st.caption(f"오류 내용: {error}")
 
         else:
-            if service_result.success:
-                st.session_state["completion_success_message"] = (
-                    service_result.message
-                )
-                st.rerun()
-            else:
-                st.error(service_result.message)
+            st.session_state["completion_success_message"] = (
+                "생산 완료 처리가 완료되었습니다."
+            )
+            st.rerun()
 
 st.divider()
 
