@@ -151,7 +151,11 @@ page_title(
 
 st.divider()
 
-show_process_performance_summary()
+try:
+    show_process_performance_summary()
+except Exception as error:
+    st.error("공정실적 현황을 불러오지 못했습니다.")
+    st.caption(f"오류 내용: {error}")
 
 st.divider()
 
@@ -162,9 +166,20 @@ if "process_success_message" in st.session_state:
         st.session_state.pop("process_success_message")
     )
 
-ready_serials = get_process_ready_serials()
+ready_serials_load_failed = False
 
-if ready_serials.empty:
+try:
+    ready_serials = get_process_ready_serials()
+except Exception as error:
+    ready_serials = pd.DataFrame()
+    ready_serials_load_failed = True
+
+    st.error("공정 투입 대상 목록을 불러오지 못했습니다.")
+    st.caption(f"오류 내용: {error}")
+
+if ready_serials_load_failed:
+    pass
+elif ready_serials.empty:
     st.info("현재 공정 실적을 등록할 수 있는 Serial이 없습니다.")
 else:
     serial_records = ready_serials.to_dict(orient="records")
@@ -213,36 +228,52 @@ else:
         )
 
 
-    required_lots = get_required_material_lots(
-        product_serial_id=int(
-            selected_serial["product_serial_id"]
-        ),
-        routing_step_id=int(
-            selected_serial["routing_step_id"]
-        ),
-    )
+    required_lots_load_failed = False
+
+    try:
+        required_lots = get_required_material_lots(
+            product_serial_id=int(
+                selected_serial["product_serial_id"]
+            ),
+            routing_step_id=int(
+                selected_serial["routing_step_id"]
+            ),
+        )
+    except Exception as error:
+        required_lots = pd.DataFrame()
+        required_lots_load_failed = True
+
+        st.error("투입 자재 LOT 정보를 불러오지 못했습니다.")
+        st.caption(f"오류 내용: {error}")
 
     st.divider()
 
     st.subheader("투입 자재 LOT 선택")
 
 
-    if required_lots.empty:
+    if required_lots_load_failed:
+        material_groups = []
+        has_unavailable_material = True
+
+    elif required_lots.empty:
         st.info("이 공정에는 투입할 BOM 자재가 없습니다.")
+        material_groups = []
+        has_unavailable_material = False
 
-    material_groups = list(
-        required_lots.groupby(
-            [
-                "material_item_id",
-                "material_code",
-                "material_name",
-                "required_qty",
-            ],
-            dropna=False,
+    else:
+        material_groups = list(
+            required_lots.groupby(
+                [
+                    "material_item_id",
+                    "material_code",
+                    "material_name",
+                    "required_qty",
+                ],
+                dropna=False,
+            )
         )
-    )
+        has_unavailable_material = False
 
-    has_unavailable_material = False
     selected_lot_ids: dict[int, int] = {}
 
     with st.form("process_result_form"):
@@ -322,34 +353,51 @@ else:
         )
 
     if submitted:
-        service_result = register_process_result(
-            product_serial_id=int(
-                selected_serial["product_serial_id"]
-            ),
-            routing_step_id=int(
-                selected_serial["routing_step_id"]
-            ),
-            selected_lot_ids=selected_lot_ids,
-            result=result,
-            remark=remark,
-        )
-
-        if service_result.success:
-            st.session_state["process_success_message"] = (
-                service_result.message
+        try:
+            service_result = register_process_result(
+                product_serial_id=int(
+                    selected_serial["product_serial_id"]
+                ),
+                routing_step_id=int(
+                    selected_serial["routing_step_id"]
+                ),
+                selected_lot_ids=selected_lot_ids,
+                result=result,
+                remark=remark,
             )
-            st.rerun()
+        except Exception as error:
+            st.error(
+                "공정실적을 저장하는 중 오류가 발생했습니다. "
+                "잠시 후 다시 시도해 주세요."
+            )
+            st.caption(f"오류 내용: {error}")
         else:
-            st.error(service_result.message)
+            if service_result.success:
+                st.session_state["process_success_message"] = (
+                    service_result.message
+                )
+                st.rerun()
+            else:
+                st.error(service_result.message)
 
 st.divider()
 st.subheader("Serial별 등록 이력")
 
-history_serials = get_history_serials()
+history_serials_load_failed = False
 
-if history_serials.empty:
+try:
+    history_serials = get_history_serials()
+except Exception as error:
+    history_serials = pd.DataFrame()
+    history_serials_load_failed = True
+
+    st.error("이력 조회 대상 Serial을 불러오지 못했습니다.")
+    st.caption(f"오류 내용: {error}")
+
+if history_serials_load_failed:
+    pass
+elif history_serials.empty:
     st.info("이력을 조회할 제품 Serial이 없습니다.")
-
 else:
     history_status_labels = {
         "CREATED": "발급",
@@ -389,33 +437,41 @@ else:
     with history_col1:
         st.markdown("#### 공정 실적 이력")
 
-        process_history = get_serial_process_history(
-            history_serial_id
-        )
-
-        if process_history.empty:
-            st.info("아직 등록된 공정 실적이 없습니다.")
-        else:
-            st.dataframe(
-                process_history,
-                use_container_width=True,
-                hide_index=True,
+        try:
+            process_history = get_serial_process_history(
+                history_serial_id
             )
+        except Exception as error:
+            st.error("공정 실적 이력을 불러오지 못했습니다.")
+            st.caption(f"오류 내용: {error}")
+        else:
+            if process_history.empty:
+                st.info("아직 등록된 공정 실적이 없습니다.")
+            else:
+                st.dataframe(
+                    process_history,
+                    use_container_width=True,
+                    hide_index=True,
+                )
 
     with history_col2:
         st.markdown("#### 자재 LOT 소비 이력")
 
-        material_consumptions = (
-            get_serial_material_consumptions(
-                history_serial_id
+        try:
+            material_consumptions = (
+                get_serial_material_consumptions(
+                    history_serial_id
+                )
             )
-        )
-
-        if material_consumptions.empty:
-            st.info("아직 등록된 자재 소비 이력이 없습니다.")
+        except Exception as error:
+            st.error("자재 LOT 소비 이력을 불러오지 못했습니다.")
+            st.caption(f"오류 내용: {error}")
         else:
-            st.dataframe(
-                material_consumptions,
-                use_container_width=True,
-                hide_index=True,
-            )
+            if material_consumptions.empty:
+                st.info("아직 등록된 자재 소비 이력이 없습니다.")
+            else:
+                st.dataframe(
+                    material_consumptions,
+                    use_container_width=True,
+                    hide_index=True,
+                )
