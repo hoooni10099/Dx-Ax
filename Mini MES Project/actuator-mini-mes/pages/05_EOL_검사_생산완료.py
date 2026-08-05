@@ -162,57 +162,6 @@ def show_eol_current_trend_chart(
         f"기준 초과: {over_limit_count:,}건"
     )
 
-def show_eol_current_monitoring():
-    """EOL 최대전류 모니터링 영역을 표시한다."""
-
-    all_df = get_eol_current_trend()
-
-    st.subheader("EOL 전류 모니터링")
-
-    if all_df.empty:
-        st.info("등록된 EOL 검사 결과가 없습니다.")
-        return
-
-    product_options = (
-        all_df[["product_item_id", "product_code", "product_name"]]
-        .drop_duplicates()
-        .sort_values("product_code")
-    )
-
-    product_labels = {
-        int(row["product_item_id"]): (
-            f"{row['product_code']} - {row['product_name']}"
-        )
-        for _, row in product_options.iterrows()
-    }
-
-    filter_column, limit_column = st.columns(2)
-
-    with filter_column:
-        selected_product_id = st.selectbox(
-            "제품",
-            options=list(product_labels),
-            format_func=lambda item_id: product_labels[item_id],
-        )
-
-    with limit_column:
-        current_limit_ma = st.number_input(
-            "최대 허용 전류 (mA)",
-            min_value=0.0,
-            value=1500.0,
-            step=10.0,
-            help="현재는 임시 분석 기준이며 DB에 저장되지 않습니다.",
-        )
-
-    filtered_df = get_eol_current_trend(
-        product_item_id=selected_product_id,
-    )
-
-    show_eol_current_trend_chart(
-        current_df=filtered_df,
-        current_limit_ma=current_limit_ma,
-    )
-
 def reshape_operation_time_data(
     operation_time_df: pd.DataFrame,
 ) -> pd.DataFrame:
@@ -263,10 +212,36 @@ def show_eol_operation_time_boxplot(
 
     chart_df = reshape_operation_time_data(operation_time_df)
 
-    chart_df["tested_at"] = pd.to_datetime(
-        chart_df["tested_at"],
+    required_columns = {
+        "direction",
+        "operation_time_ms",
+    }
+
+    if not required_columns.issubset(chart_df.columns):
+        st.error("동작시간 차트에 필요한 데이터 열이 없습니다.")
+        return
+
+    chart_df["operation_time_ms"] = pd.to_numeric(
+        chart_df["operation_time_ms"],
         errors="coerce",
     )
+
+    chart_df = chart_df.dropna(
+        subset=[
+            "direction",
+            "operation_time_ms",
+        ]
+    )
+
+    if chart_df.empty:
+        st.info("표시할 유효한 EOL 동작시간 데이터가 없습니다.")
+        return
+
+    if "tested_at" in chart_df.columns:
+        chart_df["tested_at"] = pd.to_datetime(
+            chart_df["tested_at"],
+            errors="coerce",
+        )
 
     boxplot = (
         alt.Chart(chart_df)
@@ -326,9 +301,21 @@ def show_eol_operation_time_boxplot(
         "operation_time_ms",
     ].mean()
 
+    forward_mean_text = (
+        f"{forward_mean:,.1f}ms"
+        if pd.notna(forward_mean)
+        else "데이터 없음"
+    )
+
+    reverse_mean_text = (
+        f"{reverse_mean:,.1f}ms"
+        if pd.notna(reverse_mean)
+        else "데이터 없음"
+    )
+
     st.caption(
-        f"정방향 평균: {forward_mean:,.1f}ms · "
-        f"역방향 평균: {reverse_mean:,.1f}ms · "
+        f"정방향 평균: {forward_mean_text} · "
+        f"역방향 평균: {reverse_mean_text} · "
         f"검사 표본: {len(operation_time_df):,}건"
     )
 
@@ -337,15 +324,38 @@ def show_eol_result_summary(
 ):
     """선택한 제품의 EOL 검사 결과 요약을 표시한다."""
 
-    summary_df = get_eol_result_summary(
-        product_item_id=product_item_id,
-    )
+    try:
+        summary_df = get_eol_result_summary(
+            product_item_id=product_item_id,
+        )
+    except Exception as error:
+        st.error("EOL 검사 결과 요약을 불러오지 못했습니다.")
+        st.caption(f"오류 내용: {error}")
+        return
+
+    if summary_df.empty:
+        st.info("선택한 제품의 EOL 검사 결과가 없습니다.")
+        return
 
     summary = summary_df.iloc[0]
 
-    total_count = int(summary["total_count"])
-    pass_count = int(summary["pass_count"])
-    fail_count = int(summary["fail_count"])
+    total_count = (
+        0
+        if pd.isna(summary["total_count"])
+        else int(summary["total_count"])
+    )
+
+    pass_count = (
+        0
+        if pd.isna(summary["pass_count"])
+        else int(summary["pass_count"])
+    )
+
+    fail_count = (
+        0
+        if pd.isna(summary["fail_count"])
+        else int(summary["fail_count"])
+    )
 
     pass_rate = (
         pass_count / total_count * 100
@@ -382,7 +392,16 @@ def show_eol_result_summary(
 def show_eol_monitoring():
     """EOL 전류 및 동작시간 모니터링 영역을 표시한다."""
 
-    all_df = get_eol_current_trend()
+    try:
+        all_df = get_eol_current_trend()
+    except Exception as error:
+        st.error("EOL 품질 모니터링 데이터를 불러오지 못했습니다.")
+        st.caption(f"오류 내용: {error}")
+        return
+
+    if all_df.empty:
+        st.info("표시할 EOL 품질 모니터링 데이터가 없습니다.")
+        return
 
     st.subheader("EOL 품질 모니터링")
 
@@ -434,20 +453,27 @@ def show_eol_monitoring():
     st.divider()
 
     # 같은 제품의 동작시간 데이터 조회
-    operation_time_df = get_eol_operation_time_distribution(
-        product_item_id=selected_product_id,
-    )
-
-    show_eol_operation_time_boxplot(
-        operation_time_df=operation_time_df,
-    )
+    try:
+        operation_time_df = get_eol_operation_time_distribution(
+            product_item_id=selected_product_id,
+        )
+    except Exception as error:
+        st.error("EOL 동작시간 분포를 불러오지 못했습니다.")
+        st.caption(f"오류 내용: {error}")
+    else:
+        if operation_time_df.empty:
+            st.info("선택한 제품의 동작시간 데이터가 없습니다.")
+        else:
+            show_eol_operation_time_boxplot(
+                operation_time_df=operation_time_df,
+            )
 
     st.divider()
 
-    # 선택한 제품의 최대전류 데이터 조회
-    current_df = get_eol_current_trend(
-        product_item_id=selected_product_id,
-    )
+    # 이미 조회한 전체 데이터에서 선택한 제품만 필터링
+    current_df = all_df.loc[
+        all_df["product_item_id"] == selected_product_id
+    ].copy()
 
     show_eol_current_trend_chart(
         current_df=current_df,
@@ -516,10 +542,24 @@ if eol_result_message is not None:
         del st.session_state["eol_result_message"]
         st.rerun()
 
-eol_ready_serials = get_eol_ready_serials()
+try:
+    eol_ready_serials = get_eol_ready_serials()
+except Exception as error:
+    eol_ready_serials = pd.DataFrame()
+    eol_ready_serials_load_failed = True
 
-if eol_ready_serials.empty:
-    st.info("현재 EOL 검사를 등록할 수 있는 제품 Serial이 없습니다.")
+    st.error("EOL 검사 대상 목록을 불러오지 못했습니다.")
+    st.caption(f"오류 내용: {error}")
+else:
+    eol_ready_serials_load_failed = False
+
+if eol_ready_serials_load_failed:
+    pass
+
+elif eol_ready_serials.empty:
+    st.info(
+        "현재 EOL 검사를 등록할 수 있는 제품 Serial이 없습니다."
+    )
 
 else:
     # Serial 선택 코드
@@ -560,9 +600,6 @@ else:
             "작업지시",
             selected_serial["work_order_no"],
         )
-
-    st.write(eol_ready_serials.columns.tolist())
-    st.dataframe(eol_ready_serials)
 
     is_sensor_product = (
         selected_serial["item_code"] == "ACT-SENSOR"
@@ -703,10 +740,6 @@ else:
 
 st.divider()
 
-show_eol_monitoring()
-
-st.divider()
-
 st.subheader("2. 생산 완료 처리")
 
 if "completion_success_message" in st.session_state:
@@ -714,10 +747,22 @@ if "completion_success_message" in st.session_state:
         st.session_state.pop("completion_success_message")
     )
 
-completion_ready_serials = get_completion_ready_serials()
+try:
+    completion_ready_serials = get_completion_ready_serials()
+except Exception as error:
+    completion_ready_serials = pd.DataFrame()
+    completion_ready_serials_load_failed = True
 
-if completion_ready_serials.empty:
-    st.info("현재 생산 완료 처리할 수 있는 제품 Serial이 없습니다.")
+    st.error("생산 완료 대상 목록을 불러오지 못했습니다.")
+    st.caption(f"오류 내용: {error}")
+else:
+    completion_ready_serials_load_failed = False
+
+if completion_ready_serials_load_failed:
+    pass
+
+elif completion_ready_serials.empty:
+    st.info("현재 생산 완료 처리할 제품 Serial이 없습니다.")
 
 else:
     completion_options = {
@@ -773,7 +818,7 @@ else:
         key="complete_product_button",
     ):
         try:
-            complete_product(
+            service_result = complete_product(
                 product_serial_id=int(
                     selected_completion_serial[
                         "product_serial_id"
@@ -786,18 +831,22 @@ else:
                 ),
             )
 
-            st.session_state["completion_success_message"] = (
-                f"{selected_completion_serial['serial_no']}의 "
-                "생산 완료 처리가 정상적으로 등록되었습니다."
-            )
-
-            st.rerun()
-
-        except ValueError as error:
-            st.error(str(error))
-
         except Exception as error:
             st.error(
-                f"생산 완료 처리 중 오류가 발생했습니다: {error}"
+                "생산 완료 처리 중 오류가 발생했습니다. "
+                "잠시 후 다시 시도해 주세요."
             )
+            st.caption(f"오류 내용: {error}")
 
+        else:
+            if service_result.success:
+                st.session_state["completion_success_message"] = (
+                    service_result.message
+                )
+                st.rerun()
+            else:
+                st.error(service_result.message)
+
+st.divider()
+
+show_eol_monitoring()
