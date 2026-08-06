@@ -1,0 +1,61 @@
+<Power Shell>
+smart@3ST20:/mnt/c/Windows/system32$ cd
+smart@3ST20:~$ ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 172.22.125.199  netmask 255.255.240.0  broadcast 172.22.127.255
+        inet6 fe80::215:5dff:fe5b:d32a  prefixlen 64  scopeid 0x20<link>
+        ether 00:15:5d:5b:d3:2a  txqueuelen 1000  (Ethernet)
+        RX packets 143  bytes 36438 (36.4 KB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 94  bytes 20226 (20.2 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 48  bytes 4236 (4.2 KB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 48  bytes 4236 (4.2 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+
+172.22.125.199
+
+
+
+<cmd>
+C:\Windows\System32>ipconfig
+
+Windows IP 구성
+
+
+이더넷 어댑터 이더넷:
+
+   연결별 DNS 접미사. . . . :
+   링크-로컬 IPv6 주소 . . . . : fe80::774f:9d05:fa6b:f748%3
+   IPv4 주소 . . . . . . . . . : 10.10.21.30
+   서브넷 마스크 . . . . . . . : 255.255.255.0
+   기본 게이트웨이 . . . . . . : 10.10.21.254
+
+이더넷 어댑터 vEthernet (WSL (Hyper-V firewall)):
+
+   연결별 DNS 접미사. . . . :
+   링크-로컬 IPv6 주소 . . . . : fe80::af17:e131:84b:e0f0%27
+   IPv4 주소 . . . . . . . . . : 172.22.112.1
+   서브넷 마스크 . . . . . . . : 255.255.240.0
+   기본 게이트웨이 . . . . . . :
+-------------------------------------------------------------------
+
+C:\Windows\System32>netsh interface portproxy add v4tov4 ^
+More? listenaddress=0.0.0.0 ^
+More? listenport=8501 ^
+More? connectaddress=172.22.125.199 ^
+More? connectport=8501
+
+
+C:\Windows\System32>netsh advfirewall firewall add rule name="WSL Streamlit 8051" dir=in action=allow protocol=TCP localport=8501
+확인됨
+
+
+streamlit 서버 열려있는 상태에서 ipconfig의 IPv4주소로 접속
