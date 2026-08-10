@@ -221,3 +221,11 @@ pcb도
 경력기술서 경력이있다면
 (프로젝트 개요, 문제 상황, 원인 분석, 수행내용,결과) 조금이라도 한것들은 관련이 있다면 어필하라
 자소서
+
+TI/엔비디아 이런 외국계에도 resume 등록
+world robot summit
+vector
+vesa
+misra
+autosar
+can통신
