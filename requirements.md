@@ -229,3 +229,7 @@ vesa
 misra
 autosar
 can통신
+
+이력서에 Key skills
+
+마지막에 나는 뭘잘하고 뭘했고 내 자랑을 좀 요약해서 노력하겠습니다 감사하겠습니다 작성
