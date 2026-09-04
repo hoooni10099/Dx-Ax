@@ -265,3 +265,6 @@ can통신
 spring, nodejs, nestjs
 
 디지털 트윈(모니터링 + 시뮬레이션)
+
+Docker를 관리하는 프로그램 쿠버네티스?
+
