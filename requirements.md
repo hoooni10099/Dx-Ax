@@ -268,3 +268,5 @@ spring, nodejs, nestjs
 
 Docker를 관리하는 프로그램 쿠버네티스?
 
+LLM 여러 개 사용 토큰 다 써봐
+맥 mini
