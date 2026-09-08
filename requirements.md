@@ -270,3 +270,5 @@ Docker를 관리하는 프로그램 쿠버네티스?
 
 LLM 여러 개 사용 토큰 다 써봐
 맥 mini
+
+virtual box는 어디에 쓸거고 Mobaxterm은 어디에 쓸거고 wsl은 어디에 쓰고 uv는 어디에 쓰고 등등 정해
